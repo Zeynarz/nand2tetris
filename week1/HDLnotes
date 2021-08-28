@@ -1,0 +1,36 @@
+HDL(Hardware Description Language)
+------------------------------------
+CHIP someGate{
+    IN a,b;
+    OUT out;
+    
+    PARTS:
+    //implementation here
+}
+
+Let's say we're trying to implement the XOR gate
+If we use the previous way to convert truth table to function, XOR function:
+f(a,b) = [a AND NOT(b)] OR [NOT(a) AND b]
+
+Gate diagram of XOR gate: https://electronicsphysics.com/wp-content/uploads/2021/06/Circuit-diagram-of-XOR-gate-using-basic-logic-gates-1024x498.jpg
+
+Gate diagram to HDL
+---------------------
+(In HDL,every output wire of logic gates need names)
+
+CHIP Xor{
+    IN a,b;
+    OUT out;
+
+    PARTS:
+    NOT (in=a,out=nota);
+    NOT (in=b,out=notb);
+    AND (a=a,b=notb,out=aAndNotb);
+    AND (a=nota,b=b,out=notaAndb);
+    Or  (a=aAndNotb,b=notaAndb,out=out);
+}
+
+HDL is just a textural description of the gate diagram
+HDL is a functional / declarative language (Everything happens all at once)
+
+Most popular HDLs are VHDL and Verilog :))

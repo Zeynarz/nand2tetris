@@ -1,0 +1,95 @@
+Boolean Operations,Expressions,Functions
+----------------------------------------
+Unary operation: only take one input (like NOT gate)
+
+AND,OR,NOT,XOR,NAND                     <- Boolean Operations
+NOT(0 OR (1 AND 1 ))                    <- Boolean Expression
+f(x,y,z) = (x AND y) OR (NOT(x) AND z)  <- Boolean Functions
+
+For boolean functions, there are only a finite number of possible inputs,and finite number of possible outputs
+For example there are only 8 possible inputs/outputs for function f(x,y,z)
+(first possible input being (0,0,0) last possible input being (1,1,1))
+
+Two ways to describe boolean functions, formulaes and truth tables
+
+Boolean identities
+-------------------
+x AND y = y AND x                        <- Commutative Laws
+x AND (y AND z) = (x AND y) AND z        <- Associative Laws
+x AND (y OR z) = (x AND y) OR (x AND z)  <- Distributive Laws
+
+De Morgan Laws:
+NOT(x AND y) = NOT(x) OR NOT(y) 
+NOT(x OR y) = NOT(x) AND NOT(y)
+
+Boolean Algebra
+----------------
+Simplify
+NOT(NOT(x) AND NOT(x OR y)) = NOT(NOT(x) AND (NOT(x) AND NOT(y))) 
+                            = NOT((NOT(x) AND NOT(x)) AND NOT(y))
+                            = NOT(NOT(x) AND NOT(y))  <- 1 AND 1  = 1 ; 0 AND 0 = 0
+                            = NOT(NOT(x)) OR NOT(NOT(y)) <- !!True = True
+                            = x OR y
+
+Can also simplify using Truth Table
+
+Making boolean functions from truth tables
+-------------------------------------------
+When building a computer,you would want certain inputs to have certain outputs.
+(We know what we want a certain unit to do while building a computer, but then we actually have to compose it from primitive gates and primitive operations)
+
+Now if you plot all the inputs into a truth table and describe what you would want the output to be
+how can you convert it to a function? (How to convert truth table to a function?)
+
+Find all of the rows whose output is True and try to make a function for each of them
+---------
+|x|y|z|f|
+|-|-|-|-|
+|0|0|0|1| <- NOT(x) AND NOT(y) AND NOT(z)
+|-|-|-|-|
+|0|0|1|0|
+|-|-|-|-| 
+|0|1|0|1| <- NOT(x) AND y AND NOT(z)
+|-|-|-|-|
+|0|1|1|0|
+|-|-|-|-|
+|1|0|0|1| <- x AND NOT(y) AND NOT(z)
+|-|-|-|-|
+|1|0|1|0|
+|-|-|-|-|
+|1|1|0|0|
+|-|-|-|-|
+|1|1|1|0|
+---------
+
+And then you can merge them all together by adding an OR in between, so this becomes
+NOT(x) AND NOT(y) AND NOT(z)) OR (NOT(x) AND y AND NOT(z)) OR (x AND NOT(y) AND NOT(z))
+After simplification, the function becomes
+f(x,y,z) = NOT(z) AND (NOT(x) OR NOT(y))
+
+Any Boolean function can be represented using an expression containing AND and NOT operations
+(dont even need OR operation)
+x OR y = NOT(NOT(x) AND NOT(y))
+
+Any Boolean function can be represented using an expression containing only NAND operations. (Yeah!)
+(can make AND and NOT using NAND operations)
+NOT(x) = (x NAND x)
+(x AND y) = NOT(x NAND y)
+
+This means you can compute everything, only using NAND gates
+
+
+Logic Gates
+--------------
+How to build logic gates using hardware? (transistors?)
+(Logic gates are just boolean operations(?))
+
+Elementary logic gates: NAND,AND,OR...
+Composite  logic gates: Adder,multiplexer ..
+
+Three way/input AND also a composite gate
+
+(Logic gates can also be described/implemented using circuits and buttons)
+
+
+
