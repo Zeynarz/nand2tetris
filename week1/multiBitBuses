@@ -1,0 +1,30 @@
+Multi-bit Buses
+-----------------
+How 2 deal with multiple bits together?
+(Bunch of bits together are sometimes called buses)
+
+Lets say there is a 16-bit adder,its convenient to think that there are two inputs(16 bits inputs)
+and one output(16 bit output) 
+But in reality,there are 32 wires feeding in,and 16 wires feeding out
+
+How can you describe this in HDL? 
+CHIP Add16{
+    IN a[16], b[16];
+    OUT out[16];
+
+    PARTS:
+        ...
+}
+
+(a[4] can also be called a bus(?))
+
+Sub busses from bus
+-----------------------
+IN lsb[8],msb[8],rand[16];
+OUT out[16];
+
+Add16(a[0..7]=lsb, a[8..15]=msb),b=rand,out=out);
+
+
+a[1..7] in HDL is same as a[1:8] in python
+

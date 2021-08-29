@@ -42,25 +42,17 @@ Now if you plot all the inputs into a truth table and describe what you would wa
 how can you convert it to a function? (How to convert truth table to a function?)
 
 Find all of the rows whose output is True and try to make a function for each of them
----------
-|x|y|z|f|
-|-|-|-|-|
-|0|0|0|1| <- NOT(x) AND NOT(y) AND NOT(z)
-|-|-|-|-|
-|0|0|1|0|
-|-|-|-|-| 
-|0|1|0|1| <- NOT(x) AND y AND NOT(z)
-|-|-|-|-|
-|0|1|1|0|
-|-|-|-|-|
-|1|0|0|1| <- x AND NOT(y) AND NOT(z)
-|-|-|-|-|
-|1|0|1|0|
-|-|-|-|-|
-|1|1|0|0|
-|-|-|-|-|
-|1|1|1|0|
----------
+-----------------
+| x | y | z | f |
+| 0 | 0 | 0 | 1 | <- NOT(x) AND NOT(y) AND NOT(z)
+| 0 | 0 | 1 | 0 |
+| 0 | 1 | 0 | 1 | <- NOT(x) AND y AND NOT(z)
+| 0 | 1 | 1 | 0 |
+| 1 | 0 | 0 | 1 | <- x AND NOT(y) AND NOT(z)
+| 1 | 0 | 1 | 0 |
+| 1 | 1 | 0 | 0 |
+| 1 | 1 | 1 | 0 |
+-----------------
 
 And then you can merge them all together by adding an OR in between, so this becomes
 NOT(x) AND NOT(y) AND NOT(z)) OR (NOT(x) AND y AND NOT(z)) OR (x AND NOT(y) AND NOT(z))

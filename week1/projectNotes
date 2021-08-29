@@ -1,0 +1,42 @@
+Given: Nand
+Goal: Build 
+     -Not(d) -And(d) -Or(d) -Xor(d) -Mux(d) -Dmux(d) -Not16(d) -And16(d) -Or16(d) -Mux16(d) 
+     -Or8Way(d) -Mux4Way16(d) -Mux8Way16(d) -DMux4Way -DMux8Way
+
+(d) meaning done
+
+Multiplexors
+-------------
+if (sel==0)
+    out=a
+else
+    out=b
+
+Using multiplexors to build programmable gates
+--------------------------------------------------
+AndMuxOr:
+if (sel==0)
+    out = (a AND b)
+else
+    out = (a OR b)
+
+HDL:
+And (a=a,b=b,out=andOut);
+Or  (a=a,b=b,our=orOut);
+Mux (a=andOut,b=orOut,sel=sel,out=out)
+
+Multiplexors can be implemented using AND,OR and NOT gates.
+
+Demultiplexers
+-----------------
+
+              |--> a 
+in --> DMux --|
+        |     |--> b
+        |
+       sel
+
+if (sel==0)
+    send in to a (b will be 0)
+else
+    send in to b (a will be 0)
