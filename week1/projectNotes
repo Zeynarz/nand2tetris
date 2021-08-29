@@ -1,7 +1,7 @@
 Given: Nand
 Goal: Build 
      -Not(d) -And(d) -Or(d) -Xor(d) -Mux(d) -Dmux(d) -Not16(d) -And16(d) -Or16(d) -Mux16(d) 
-     -Or8Way(d) -Mux4Way16(d) -Mux8Way16(d) -DMux4Way -DMux8Way
+     -Or8Way(d) -Mux4Way16(d) -Mux8Way16(d) -DMux4Way(d) -DMux8Way(d)
 
 (d) meaning done
 
