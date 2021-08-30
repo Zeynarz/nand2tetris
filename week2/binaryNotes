@@ -1,0 +1,109 @@
+Binary Nums
+------------
+2^n possibilities for binary,n being the amount of bits
+Example: 2^8 for 8 bits
+
+If you have 8 bits,half of the possibilities will be used to represent positive nums,half will be used to represent negative nums
+The highest positive num (8bits) : 0111 1111 Lowest num: 1000 0000
+(Most significant bit of negative num is 1)
+
+ (To convert decimal to binary, just start from most significant bit and figure out what is the largest number of 2 that fits )
+
+Implementing Binary Addition (Adder)
+-----------------------------------
+ 0001 0101
++0101 1100
+ 0111 0001
+
+What to do when binary addition overflows? For example 8bit + 8bit = 9bit
+Normally in computer systems,just ignore the final carry. So 1000 0000 + 1000 0000 = 0000 0000
+
+Half Adder - adds two bits
+Full Adder - add three bits
+Adder - Adds two numbers
+
+Half Adder
+-----------
+Adding two bits only has 4 possibilities
+0 + 0; 0 + 1; 1 + 0; 1 + 1; 
+
+The only thing you have to note/remember is that 1+1 has a carry
+So the ouput not only has to be the sum of two bits,it also has to include if there is a carry or not
+
+a -> Half  -> sum           1 -> Half  -> 0
+b -> Adder -> carry         1 -> Adder -> 1
+
+Full Adder
+------------
+There is a problem with the Half Adder,and its that we dont know if there is a carry previously or not
+Thats easy we can just add a new input
+
+a -> Full  -> sum           1 -> Full -> 1
+b ->       -> carry         1 ->      -> 1
+c -> Adder                  1 -> Adder
+
+Multi-bit Adder
+----------------
+Just chain a couple of Full Adders together (connect the carryOutput to the next carryInput)
+and now you can add 8 bits or more together
+
+
+Negative Numbers
+-----------------
+One of the ways to represent negative numbers is to look at the most significant bit to decide whether it is negative of positive. And then look at the rest of the nums to find out the value
+(1 being negative 0 being positive) So 1001 would be -1.
+But there is a flaw and that is 1000. Which will mean -0. In Maths,0 = -0, so this implementation is not elegant
+
+So they use something called 2's Complement
+
+2's Complement
+----------------
+Represent negative num using 2^n - x , x being the positive num of the binary number
+For example:
+What is -5 in 2's complement?
+16 = 2^n and x = 5
+16 - 5 = 11
+So the 2s complement of -5 is 11 in binary which is 1011
+
+(For 4bit numbers,the highest positive num is 7 while the smallest num is -8, this is becaus there are no -0 but there is a 0)
+
+Subtraction
+----------------
+  -2    which is    14   which is   1110
++ -3              + 13            + 1101
+                                   11011
+
+The ans of 1110 + 1101 is 11011, but remember, the carry bit is thrown away, so it would result in 
+1011, which is -5 , which is correct
+
+Why does this happen?
+This is because our  addition is sum % 2^n
+16 % 16 = 0; (10000000 remove carry is 0000 0000)
+
+
+Convert x to -x
+---------------
+Lets say you want to compute 5 - 2 which is 5 + (-2).
+
+We know that we can do this by adding 5 and the 2's complement of -2.
+But how can we get the 2's complement of -2???
+Using the 2's complement formula, 2^n - 2 = ans
+
+But in order to solve this formula we need AGAIN the 2's complement of -2.
+So can we solve this formula with another way?
+Idea: 2^n -x = 1 + (2^n-1) - x
+
+Let's say we are dealing with 4bits
+2^n - 1 will be 15, or in binary 1111
+So subtraction in this form will just be flipping over the bytes
+
+  1111
+-  101
+  1010
+
+And Since we alr know addition, this works perfectly
+
+Now,we successfully implemented subtraction
+By adding 5 and the 2's complement of -2 which we got using the new 2's complement formula
+
+
