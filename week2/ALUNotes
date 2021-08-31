@@ -1,0 +1,37 @@
+ALU (Arithmetic Logic Unit)
+----------------------------
+Von Neumman wrote a paper including a diagram that described how a general purpose computer can be built (Von Neumman Architecture)
+In the Von Neumman Architecture, the CPU contained an ALU and a control unit
+
+   function/control bits
+            |
+
+Input1 ->   A
+            L   ->  output
+Input2 ->   U
+
+function could be arithmetic operations(add,multiply,subtract) 
+or logical operations (And,Or,Xor)
+
+If dont want to implement something in the hardware level/ALU,for example multiplication
+can always implement it in the software level
+
+The Hack ALU
+--------------
+16bit input and output 
+6 one bit inputs to determine what function to use (For example: 011111 = x+1;  001110 = x-1;)
+
+The 6 one bit inputs actually have meaning,they're kind of like flags
+zx :if zx then x=0
+nx :if nx then x=!x
+zy :if zy then y=0
+ny :if ny then y=!y
+f  :if f then x+y else x&y
+no :out = !out
+out:out(x,y)
+
+(These happen one after another,so if zx and nx is set,x will be 16bit 1s)
+
+There are also 2 output bits that kind of act like flags
+zr: if out == 0, then zr = 1,else zr = 0
+ng: if out is negative,ng = 1, else ng=0

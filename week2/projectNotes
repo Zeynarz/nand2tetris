@@ -1,0 +1,15 @@
+Given: All The chips build in project1
+Goal : Build
+      -Half Adder (d)
+      -Full Adder (d)
+      -Add16 (d)
+      -Inc16 (d)
+      -ALU 
+
+(d) means done
+
+Half Adder: built using XOR for sum and AND for carry
+Full Adder: two half adders and OR gate for carries
+Add16     : bunch of Full Adders (MSB carry is ignored)
+Increment : Just add 1
+

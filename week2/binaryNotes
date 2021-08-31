@@ -95,15 +95,14 @@ Idea: 2^n -x = 1 + (2^n-1) - x
 
 Let's say we are dealing with 4bits
 2^n - 1 will be 15, or in binary 1111
-So subtraction in this form will just be flipping over the bytes
+So subtraction in this form will just be flipping over the bits
 
   1111
 -  101
   1010
 
-And Since we alr know addition, this works perfectly
+This is equivalent to calling NOT on x.
+NOT(0101) = 1010 = 1111 - 0101
+So 2^n-1-x = NOT(x)
 
-Now,we successfully implemented subtraction
-By adding 5 and the 2's complement of -2 which we got using the new 2's complement formula
-
-
+So now the formula is NOT(x) + 1
