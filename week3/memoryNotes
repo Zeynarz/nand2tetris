@@ -1,0 +1,96 @@
+Memory
+-------
+Main memory: RAM (volatile, meaning when power is turned off,memory is completely wiped)
+Secondary memory: disks,memory sticks etc (non-volatile,memory state remains even if no power)
+(RAM stores the instructions/assembly, and also stores data,at least for von neumman architecture)
+(Harvard architeture stores them differently)
+
+Register
+----------
+Registers are the basic building blocks of memory
+Register's state: the value which is stored inside the register
+
+                  load
+                    |
+                    |
+16bit input  -> register -> 16bit output
+
+to read register,just read register output
+to set register,just set input=value,load=1
+
+RAM unit
+---------
+A RAM is just a bunch of registers stacked together
+There are 3 inputs and one output. 3 inputs being (in,address,load)
+
+You have to choose/select which register you want to operate on by specifying the address
+Really good Diagram: ramDiagram.png  on same folder
+
+When you are implementing the RAM
+In order to determine how many bits you need for addresses/determine width of address input
+you can use k =log(base2)n
+k as in the width of address/number of bits and n as in how many addresses are there
+
+Because possibilities of a binary is 2^k (k as in number of bits)
+So if you have 16 different addresses,you need 16 possibilities/combination of binary bits
+So 2^k = 16
+   log(base2)16 = k
+
+For example if you have 8 registers,you need 8 different addresses
+So k = log(base2)8
+   k = 3
+
+So you need 3 bits to represent 8 different addresses
+
+RAM functionality
+-----------------
+To read from Register i:
+    set address=i
+
+Result:
+    out emits the state of Register i
+
+To set/write Register i to v:
+    set address=i
+    set in=v
+    set load=i
+
+Result:
+    State of register i become v
+
+Why is the Random Access Memory called the Random Access Memory?
+Because no matter what the RAM size is,no matter how many registers there are, the time to access
+each register is the same - instantaneously!
+
+For example:
+Lets say that I have a RAM that has a billion registers.
+The time to access register 8 of the RAM is the same as the time to access register 1132425
+
+From Quora:
+Because there is no time (latency) difference in which parts of the RAM is being accessed. If you want to read from address 0x00112200 or address 0x20304000? It’s the same latency;
+
+Truly remarkable.
+
+
+Counters
+----------
+(instruction pointer/program counter)
+Besides counting,counter also need something to overwrite the counter and tell the counter to 
+start to count from there (For jmps or ret instructions)
+
+So counter needs to be able to:
+reset: set counter to 0 / fetch the first instruction
+next: counter++ / fetch the next instruction
+goto: jmp to a certain number / fetch instruction n
+
+PC = program counter
+Desired functionality:
+
+                inc/add
+             load | reset
+               |  |  |
+16bit input >     PC      -> 16bit output
+
+load is set= set counter/output to input
+inc is set = counter++
+reset is set = counter = 0

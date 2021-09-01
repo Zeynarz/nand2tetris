@@ -1,0 +1,28 @@
+Given:
+-All the chips build in project 1 and 2
+-Data Flip Flop
+
+Goal: Build the following chips:
+      -Bit -Register -RAM8 -RAM64
+      -RAM512 -RAM4K -RAM16K -PC
+
+(d) means done
+
+Implementation tips
+--------------------
+RAM8:
+-Feed the in value to all the registers simultaneuously
+-Use multiplexers/demultiplexers to get the right register
+
+RAM64 and more:
+-stack 8 RAM8s to make RAM64
+-stack 8 RAM64s to make RAM512
+-etc etc
+
+Think about RAM's address input as consisting of two fields;
+-One field can be used to select a RAM-part
+-The other firled can be used to select a register within that RAM-part
+-Use Mux/Demux
+
+Program Counter:
+-Can be built from a register,an incrementor,and some logic gates
