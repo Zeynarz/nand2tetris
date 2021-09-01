@@ -1,0 +1,106 @@
+Sequential Logic
+------------------
+previously all we dealt with was Combinatorial Logic,inputs were fixed and unchanging,time is ignored
+
+Combinatorial: out[t]  = function(in[t])
+Sequential: out[t] = function(in[t-1])
+
+Combinatorial: everything is instant,when input is received,there is immediately output
+Sequential: The input in time 1(a), will be outputed in time 2.The output in time2(a),will also be 
+            the input of time 2.
+
+a -> b=f(a) -> c = f(b)
+Since the previous output and current input is now the same,they can be stored in the same wires
+
+From wikipedia
+sequential logic is a type of logic circuit whose output depends not only on the present value 
+of its input signals but on the sequence of past inputs, the input history as well.
+
+Unlike Combinational Logic circuits that change state depending upon the actual signals being applie 
+to their inputs at that time, Sequential Logic circuits have some form of inherent “Memory” built in
+
+This means that sequential logic circuits are able to take into account their previous input state as well as those actually present,
+a sort of “before” and “after” effect is involved with sequential circuits.
+
+The Clock
+-----------
+Breaks up time into sequence of 1s and 0s
+
+1         _______     _______
+          |     |     |     |
+          |     |     |     |
+0    _____|     |_____|     |_____
+
+
+Flip Flops
+------------
+To implement sequential logic,we need something to remember the state at t-1 so it could be used at t
+(Like remember that at t-1 input was a,so at t,a could be used as input)
+
+The Clocked Data Flip Flop has a single input and a single output
+out[t] = in[t-1]
+
+Time    input   output
+1         1       ?
+2         0       1
+3         0       0
+4         1       0
+
+
+Lets say we want to build a counter,
+If we have an array of flip flops and their output fed into some combinatorial logic together
+with the new input that you get in this time unit.
+
+input
+-------->    Combinatorial ---> 16bit flip    -----> output
+     --->     Logic                 flop       |
+     |                                         |
+     |-----------<-------<---------------<-----|
+
+Now if the input was 1,and the flip flop was originally 0
+The output of the flip flop will slowly increment by 1 and then be used again as input into the adde 
+
+Remembering forever: 1 bit register
+------------------------------------
+Goal : remember an input bit forever until requested to load a new value
+What we want:
+             load
+               |
+               |
+        in -> bit -> out
+
+        if load(t-1) then out(t)=in(t-1)
+        else out(t) = out(t-1)
+
+If at time 1 load is set,then at time 2 out will be equals to in at time 1
+If load is not set,then out is the same
+
+load in out
+1    1  ?
+0    0  1
+0    0  1
+0    1  1
+0    0  1
+1    0  1
+0    0  0
+0    1  0
+ 
+How can we implement this using flip flops?
+We can implement this with some help from multiplexers
+
+        load
+in       |                                   
+---->  Multi   -> DFF ------> out
+   ->  Plexer            |
+   |_____________________|       
+
+With this we can build a register
+For example:
+Lets say that in time 3, the output of DFF is 0
+
+time4  load=1  in=1  out=0
+The multiplexer will select in because load is 1
+
+time5 load=0   in=0  out=1
+
+Now we can probably chain these together and get like 16bit registers
