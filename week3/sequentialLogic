@@ -60,6 +60,8 @@ input
 Now if the input was 1,and the flip flop was originally 0
 The output of the flip flop will slowly increment by 1 and then be used again as input into the adde 
 
+EXTRA: flip flops using NAND gates diagram: flipFlopNand.png
+
 Remembering forever: 1 bit register
 ------------------------------------
 Goal : remember an input bit forever until requested to load a new value
