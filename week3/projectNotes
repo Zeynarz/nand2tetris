@@ -3,8 +3,8 @@ Given:
 -Data Flip Flop
 
 Goal: Build the following chips:
-      -Bit -Register -RAM8 -RAM64
-      -RAM512 -RAM4K -RAM16K -PC
+      -Bit(d) -Register(d) -RAM8(d) -RAM64(d)
+      -RAM512(d) -RAM4K(d) -RAM16K(d) -PC
 
 (d) means done
 
