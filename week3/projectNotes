@@ -4,7 +4,7 @@ Given:
 
 Goal: Build the following chips:
       -Bit(d) -Register(d) -RAM8(d) -RAM64(d)
-      -RAM512(d) -RAM4K(d) -RAM16K(d) -PC
+      -RAM512(d) -RAM4K(d) -RAM16K(d) -PC(d)
 
 (d) means done
 
