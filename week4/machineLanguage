@@ -1,0 +1,100 @@
+Machine language/instructions 
+-------------------------------
+How 2 make one hardware do different kinds of things? Software
+If hardware functionality depends on software,by changing the software the hardware can do tons of different
+things.
+
+So how to make hardware(cpu) execute instructions/software?
+(rmb that instructions and data are stored in ram (Von Neumman architecture))
+
+Three questions come up when implementing instructions that can be executed by cpu:
+-How to specify what instructions to execute? opcodes
+-How to know what instruction to execute at a given time? Program counter (execute one by one)
+-How to specify data addresses in instructions? (registers? MMU?) 
+
+Compiler :convert high level programming language to instructions/opcodes
+
+Mneumonics and assembly
+-----------------------
+Lets say there is an instruction
+instruction: 010001000110010 (0100010|0011|0010)
+In the cpu 0100010 actually means ADD, and 0011 and 0010 are just registers
+So instead of saying 010001000110010, we can use a mneumonic and just say
+ADD R3,R2 <-- mneumonic (for example ret,mov,jmp in x86 all are mneumonics)
+
+Assembly language is just using mneumonics to specify instructions,assembler will then compile
+the mneumonics to corresponding op codes
+
+Example:
+example.asm contains: pop eax
+if you put example.asm through an x86 assembler
+it would compile it to 1011000  (opcode that the cpu understands)
+
+Symbols
+--------
+A lot of times we will try to access memory locations
+For example: ADD 1,Mem[129] (add 1 to memory location 129)
+
+To make the assembly programmer's life easier
+We can use symbols/variables
+
+Example:
+Lets say the programmer just wants to store a value
+instead of Mov value,Mem[129] and having to specify what memory location to use
+
+The programmer can just type 
+Mov value,valueLoc  and let the assembler handle everything else
+Althought now the programmer doesnt know which memory location the value is at (since the assembler is providing the memory location),
+that doesnt matter to the programmer since he/she just needs to store the value somewhere
+
+The assembler just needs to know that everytime the programmer specifies valueLoc,its talking about the same
+memory location
+
+So 
+Mov value,valueLoc -> assembler -> assembler chooses memory[157] as valueLoc -> everytime valueLoc is 
+mentioned the assembler translates it to memory[157]
+
+Machine language operations/ what kinds of instructions are there
+--------------------------------------------------------------------
+Basic/Common instructions:
+-Arithmetic Operations: add,subtract,...
+-Logical Operations: or ,and,xor,...
+-Control Flow: jmp,goto,...
+
+
+Memory Hierarchy
+-------------------
+To answer a previous question: How to specify data addresses in instructions?
+Lets say you have a RAM that has addresses 00000000 - 11111111
+
+If you want to add the values in 11110000 and 10011001 together, (lets say opcode for ADD is 010010)
+the computer instruction would be 0100101111000010011001, which is incredibly long and expensive
+
+So what other ways are there to specify data addresses in instructions?
+Solution: Memory Hierarchy
+Diagram: memoryHierarchy.png
+
+Instead of just having a large block of memory,we have one sequence of memory that are getting bigger 
+and bigger
+The sequence of memory will also be more and more expensive to access(cause further away from CPU?) 
+(So registers in cpu are least expensive,disks are most expensive)
+
+Sequence:
+Registers(in cpu) -> Cache -> main memory -> disks
+(eip,eax,edi,esi)   (stack?)
+
+(The memory heirarchy will be handled by MMU? idk)
+
+Registers
+----------
+CPUs usually contain a few registers
+Since they are so few of them,addressing them require very little amount of bits 
+and getting the information from them is very fast since they are already in the CPU
+
+Types of registers:
+-Data registers (store data)
+
+
+
+
+
