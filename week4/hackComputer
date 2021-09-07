@@ -1,0 +1,76 @@
+The Hack computer 
+------------------
+16 bit machine: Every operation is 16 bit,retrieve 16 bits of data,move 16 bits of data etc
+For example: pop 16 bit ,push 16 bit
+
+(32bit processor also means the cpu has 32bit registers,64bit processor means 64bit registers)
+
+Hardware of the Hack computer is:
+16 bit ROM (holds instructions) -> CPU <-> 16 bit RAM(holds data)
+There are also buses to connect for example the cpu and ram to allow transfer of data
+(There is also a reset button)
+
+Diagram: hackComputer.png
+(All a computer is is just a cpu and some memory)
+
+The Hack Machine language 
+---------------------------
+Two category of instructions
+-A instructions 
+-C instructions 
+
+all instructions are 16 bit long
+
+To tell the computer to do something:
+-Load ROM with Hack program(list of hack instructions)
+-Press reset button
+-Program starts running
+
+Three types of registers in The Hack computer
+D register - holds 16 bit value (data)
+A register - holds 16 bit value (address or data)
+M register - the register currently selected in RAM (selected by address in A register)
+
+A-instruction
+--------------
+syntax = @value
+value can be:
+-non negative decimal
+-symbol
+
+Function:
+set A register to value
+M register will also be set to RAM[A]
+
+Example:
+@21
+
+-set A register 
+-RAM[21] will now be the selected RAM register
+
+Usage:
+@100 //A=100
+M=-1 //RAM[100] = -1
+
+C-instruction
+--------------
+dest = computation;jump (dest and jump are optional)
+Example instructions/mneumonics:
+computation (A-1,D+M,M+1)
+dest (null,M,D,AM,AD) (can have 1+ destinations)
+jump (null,JGT,JEQ,JLT)
+
+Examples:
+//Set RAM[300] to the value of D register - 1
+@300
+M=D-1
+
+//If (D-1==0) jmp to the instruction stored in ROM[56]
+@56
+D-1;JEQ //JEQ is jmp if zero
+
+
+
+
+
+

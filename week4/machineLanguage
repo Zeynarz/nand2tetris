@@ -56,7 +56,7 @@ mentioned the assembler translates it to memory[157]
 
 Machine language operations/ what kinds of instructions are there
 --------------------------------------------------------------------
-Basic/Common instructions:
+Basic/Common instructions to implement:
 -Arithmetic Operations: add,subtract,...
 -Logical Operations: or ,and,xor,...
 -Control Flow: jmp,goto,...
@@ -93,8 +93,42 @@ and getting the information from them is very fast since they are already in the
 
 Types of registers:
 -Data registers (store data)
+-Address registers (store addresses)
+
+Addressing modes
+-----------------
+Register
+-Add r1,r2  (r2 <- + r1)
+
+Direct
+-Add r1,m[200]  (mem[200] <- mem[200] + r1)
+
+Indirect
+-Add R1,@A (mem[a] <- mem[a] + r1 (symbols?))
+
+Immediate
+-Add 73,r1  (r1 <- r1 + 73)
+
+Input / Output
+-----------------
+(keyboard,mouse,sensors etc)
+Use memory mapped IO
+
+meaning like memory location  23212 holds the direction of the last movement of the mouse
+and maybe memory location 32323 holds one of the pixel on the monitor, and you can just write to the memory
+location to change the pixel
+
+Control Flow 
+---------------
+Jmps,calls,rets (also need cmp for ifs)
+
+Two types of jmps,
+unconditional (just jmp, no cmp)
+conditional (if ... then jmp)
 
 
-
-
-
+101 load r1,0
+102 add 1,r1
+..
+...
+156 jmp 102 
