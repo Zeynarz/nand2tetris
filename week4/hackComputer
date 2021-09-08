@@ -77,14 +77,14 @@ binary syntax            : one 0 (opcode)followed by the value to load
 A-instruction opcode is 0
 
 Example:
-symbolic: @3
-binary  : 0000000000000011
+symbolic/assembly: @3
+binary           : 0000000000000011
 
 @3 -> assembler -> 0000000000000011
 
 (C-instruction)
-symbolic syntax: dest = computation; jump
-binary syntax  : 1 1 1 a c1 c2 c3 c4 c5 c6 d1 d2 d3 j1 j2 j3
+symbolic syntax/assembly: dest = computation; jump
+binary syntax           : 1 1 1 a c1 c2 c3 c4 c5 c6 d1 d2 d3 j1 j2 j3
 
 First bit is C-instruction opcode (telling the cpu that this is a C-instruction)
 2nd and 3rd bit is useless

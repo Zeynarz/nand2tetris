@@ -1,0 +1,192 @@
+Working with registers
+------------------------------------
+(There is a CPU emulator that lets you test symbolic hack code)
+
+D: data register
+A: address/data register
+M: currently selected register (RAM[A])
+
+Address 30: 12321
+@30
+A will be 30
+M will be 12321
+
+Examples of working with registers:
+//Set D = 10
+@10
+D=10
+
+//D++
+D=D+1
+
+//D = RAM[17]
+@17
+D=M
+
+//RAM[17] = 10
+@10
+D=A
+@17
+M=D
+
+//RAM[5] = RAM[3]
+@3
+D=M
+@5
+M=D
+
+The Hack language actually have implicit line numbers
+(White space is ignored)
+For example:
+0 @3
+1 D=M
+
+2 @5
+3 M=D
+
+So to jmp to the instruction that is D=M, simply jmp to 1
+
+
+There is a problem with example programs above and that is the program never terminates.
+For example the program that executes RAM[5] = RAM[3]
+Once it finishes executing instruction 3
+It will still continue executing instruction 4,5,6... and so on
+(Instruction 4,5,6 .. will probably be null like 0000000000000000)
+
+If we dont deal with this, there may be some random instruction at some address
+that does something unexpected 
+
+(The random instruction may be caused because the ROM wasnt completely wiped before entering a new
+program)
+(So for example the previous program had 100instructions,and the program now has 50 instructions
+,if the ROM wasnt completely wiped,after finishing your program,it will continue executing the 
+previous program starting at instruction 51)
+
+To make sure the program doesnt keep on executing instructions 4,5,6 etc
+we can end the program in an infinite loop
+So adding 
+
+@4
+0;JMP
+
+Will cause the program to keep executing instructions that we wrote and kind of terminate 
+
+Built-in symbols
+-----------------
+There are symbols like R0,R1,R2 that represents value 0,1,2 (up to R15)
+so R1 = 1
+
+This is done so the code is more readable
+
+Instead of 
+//RAM[5] = 15
+@15 //Use as decimal
+D=A
+@5  //Use as register
+M=D
+
+Cleaner version:
+@15
+D=A
+@R5
+M=D
+
+So when you use the built in symbols,it would mean you are accessing a register
+(There are only 16 built in symbols so you can only specify the first 16 registers using these symbols)
+
+There are also symbols SCREEN,KBD which is the base address of the screen and keyboard memory map
+SCREEN = 16384
+KBD = 24576
+
+Branching
+----------
+Meaning of branching: if (boolean expression) then jmp ... etc etc
+Examples of branching in Hack assembly:
+//if R0>0; R1=1 else R1=0
+@R0
+D=M
+
+@8
+D;JGT
+
+@R1
+M=0
+@10     //infinite loop/terminate
+0;JMP
+
+@R1
+M=1
+
+@10
+0;JMP
+
+This program works but it isnt very readable
+There is a very nice feature in assembly languages called symbolic references and we can use it
+
+Symbolic references is about instead of specifying the line of the instruction we want to jmp to
+We use labels.
+
+After using symbolic references:
+@R0
+D=M
+
+@POSITIVE //jumping to label
+D;JGT
+
+@R1
+M=0
+@END
+0;JMP
+
+(POSITIVE) //declaring the label
+@R1
+M=1
+
+(END)
+@END
+0;JMP
+
+This code is much more readable now.
+(The assembler will deal with converting the label to the instruction line)
+(So in this case the assembler will convert POSITIVE to 8)
+
+Variables 
+----------
+Only one variable type in the Hack language, 16bit values
+Variable usage example:
+//Swap values of RAM[0] and RAM[1]
+@R1
+D=M
+@temp
+M=D
+
+@R0
+D=M
+@R1
+M=D
+
+@temp
+D=M
+@R0
+M=D
+
+infinite loop...
+
+@temp means find a random memory register, and use it to represent the variable temp.
+Now every time you mention @temp in the program,it will refer to the same memory register 
+
+So for example if the assembler decided that @temp is at memory register n
+whenever you mention @temp in the program,it will get translated to memory register n
+
+(The memory registers that are chosen by the assembler actually start from address 16 onward)
+(So the first variable will be at address 16,second will be at address 17 ...)
+
+
+Iteration
+---------
+Just use jmps like (JGE,JNE etc) for iteration
+(Before writing the assembly of a program,can design the program using pseudo code first)
+
+Pointers
+---------
+
