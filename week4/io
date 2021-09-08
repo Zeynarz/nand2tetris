@@ -1,0 +1,60 @@
+Input/Output
+-------------
+input output are basically used to get data and display data from/to users
+For example monitor and keyboard
+
+
+Screen memory map
+--------------------
+A memory area in RAM which is used to manage a display/screen
+The physical display/screen is continuously refreshed from the memory map and reads from the memory map
+So to set a pixel on the display,simply write to the memory area
+
+The Hack computer display assumes that the display unit has 256*512 pixels,and the pixels are either
+black or white  (length: 256,width: 512)
+
+If one bit determines if the pixel is black or white
+then we need 256*512 = 131072 bits,so the screen memory map needs to be atleast 131072 big/long
+
+131072/16 = 8192
+So 8192 16 bit registers is enough to hold all these bits
+So the screen memory map needs to have at least 8192 registers
+
+(The read/write operations are always 16 bit operations,so we cant actually access individual bits,
+we have to read the whole 16 bit register, change one bit,then rewrite the whole 16 bit register)
+
+One row of the display unit corresponds to 32 registers (32 * 16 = 512)
+So to write the top left bit , you have to access the first bit in the 0th register
+And to write the top right bit, you have to access the last bit in the 31st register
+
+To set pixel (row,col) (row and column both start at 0):
+register = row * 32 + col/16 (integer division)
+
+So for example I want to write to the pixel at row 5 column 32
+register = 5 * 32 + 32/16
+         = 160 + 2
+         = 162
+
+meaning I need to write to register 162
+
+Now we know the register we just have to know which bit out of the 16 bits to modify
+bit = col % 16
+
+so column 32
+32 % 16 = 0
+So to write to the pixel at row 5, column 32, write to 0th bit of register 162 
+
+
+Keyboard memory map (Getting input from keyboard)
+--------------------------------------------------
+The keyboard memory map is only 16 bits,so only need one 16 bit register!
+When you press a key on the keyboard, it simply sends the ascii value of the key to the computer
+So the keyboard memory map only needs to store the ascii value of the pressed key
+(When no key is pressed,value in the memory map will be 0)
+
+Example:
+"A" is pressed,      keyboard memory map = 0000000001000001 (0x41) 
+spacebar is pressed, keyboard memory map = 0000000000100000 (0x20)
+
+
+

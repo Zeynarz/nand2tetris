@@ -35,7 +35,7 @@ A-instruction
 --------------
 syntax = @value
 value can be:
--non negative decimal
+-non negative decimal (2^15 -1)
 -symbol
 
 Function:
@@ -69,8 +69,36 @@ M=D-1
 @56
 D-1;JEQ //JEQ is jmp if zero
 
+Binary syntax/Opcodes of instructions
+------------------------------------------
+(A-instruction)
+symbolic syntax/mneumonic: @value
+binary syntax            : one 0 (opcode)followed by the value to load
+A-instruction opcode is 0
 
+Example:
+symbolic: @3
+binary  : 0000000000000011
 
+@3 -> assembler -> 0000000000000011
 
+(C-instruction)
+symbolic syntax: dest = computation; jump
+binary syntax  : 1 1 1 a c1 c2 c3 c4 c5 c6 d1 d2 d3 j1 j2 j3
 
+First bit is C-instruction opcode (telling the cpu that this is a C-instruction)
+2nd and 3rd bit is useless
+4th  - 10th bit is to specify computation
+11th - 13th bit is to specify destination
+14th - 16th bit is to specify jumps
+
+(The bits that specify computation are actually the control bits for the ALU)
+
+Example:
+M = 1
+to specify the dest is M,the dest bits should be 001
+to specify the computation is 1, the comp bits should be 111111
+to specify no jump,jump bits shoudl be 000
+So the instruction in binary syntax is:
+1110111111001000
 
