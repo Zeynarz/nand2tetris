@@ -50,6 +50,7 @@ Keyboard memory map (Getting input from keyboard)
 The keyboard memory map is only 16 bits,so only need one 16 bit register!
 When you press a key on the keyboard, it simply sends the ascii value of the key to the computer
 So the keyboard memory map only needs to store the ascii value of the pressed key
+(To read what key is currently pressed,simply read from the keyboard memory map register)
 (When no key is pressed,value in the memory map will be 0)
 
 Example:

@@ -189,4 +189,41 @@ Just use jmps like (JGE,JNE etc) for iteration
 
 Pointers
 ---------
+(Arrays are just pointers/addresses/some location in memory)
+(Variables that store addresses are pointers)
+When a pointer is pointing at something, it means the address in the pointer is 'something'
+Example:
+A variable/pointer is storing the address of screen
+The pointer is pointing at screen
 
+@temp
+M=SCREEN
+
+(temp is pointing at screen)
+
+Input/Output
+-------------
+Drawing a 16 pixel wide  and n pixel long rectangle on the display/monitor
+(n determined by RAM[0])
+
+Pseudo code :
+//for (i=0;i<n;i++){
+//    address = -1
+//    address += 32
+//}
+
+addr = SCREEN
+n = RAM[0]
+i = 0
+
+LOOP:
+    if i > n goto END
+    RAM[addr] = -1
+
+    addr = addr + 32
+    i++
+    goto LOOP
+
+END:
+    goto END
+    

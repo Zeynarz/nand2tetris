@@ -98,7 +98,7 @@ Example:
 M = 1
 to specify the dest is M,the dest bits should be 001
 to specify the computation is 1, the comp bits should be 111111
-to specify no jump,jump bits shoudl be 000
+to specify no jump,jump bits should be 000
 So the instruction in binary syntax is:
 1110111111001000
 
