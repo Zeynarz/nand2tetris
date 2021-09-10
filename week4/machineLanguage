@@ -1,8 +1,7 @@
 Machine language/instructions 
 -------------------------------
 How 2 make one hardware do different kinds of things? Software
-If hardware functionality depends on software,by changing the software the hardware can do tons of different
-things.
+If hardware functionality depends on software,by changing the software the hardware can do tons of different things. (Amazing!)
 
 So how to make hardware(cpu) execute instructions/software?
 (rmb that instructions and data are stored in ram (Von Neumman architecture))

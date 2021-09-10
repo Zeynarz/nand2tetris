@@ -1,0 +1,72 @@
+Elements
+----------
+The two main components of a computer is the CPU and the memory.
+(A computer is just a cpu and some memory)
+
+For our computer (the Hack computer),
+the CPU is going to be composed of two main components:
+-the ALU
+-registers (A,D etc)
+
+The memory also has two parts:
+-The part where data is stored
+-The part where instructions are stored
+
+Well what information is exchanged from/to the CPU and Memory?
+
+Information Flows
+------------------
+Diagram: infoFlow.png
+There are three types of information that are passed around between CPU and Memory:
+-Data (the sum of two numbers that is outputed by the ALU that needs to be sent to RAM etc)
+-Address (what address in memory do we need to access etc)
+-Control (transfer control bits , jmps etc)
+
+These information transfers are implemented by wires/bus.
+So there is an address bus,control bus and data bus
+
+(exp means Example)
+(own means own assumptions)
+
+The connection between ALU and the buses:
+- ALU is used to perform operations like addition etc,so it definetely needs to be connected to the
+  data bus to get data for the operations (exp:what nums to be added) and 
+  output data that is computed (exp: sum of 2 nums) 
+
+- the ALU also needs to be connected to the control bus so it can get control bits and know
+  what operations to perform (exp: add,and,not,or etc). Besides, according to the output of 
+  the operations the ALU performs,it also needs to tell other parts of the system what to do
+  (exp: ALU sees that a certain num is greater than 0,so it uses control bus to tell PC to jmp)
+
+So the ALU have to send and receive information from/to the data bus.
+the ALU also have to send and receive information from/to the control bus.
+
+The connection between cpu registers and the buses:
+- Registers are used to store data so it definetely needs to be connected to the data bus
+  (exp: storing the result of D + M outputed by the ALU in the D register)
+  The registers also need to be able to send data to other places for example the ALU, so it 
+  also needs to use the data bus for sending data (exp: if the ALU wants to compute D+M,
+  it has to get the value of D from the registers)
+
+- Some registers like the A register are used to specify addresses. The A register is used to
+  specify what address is selected in the RAM. So for the RAM to get the value of the A register,
+  the registers have to be connected to the address bus to send the value of the A register.
+  (own: A register output probably connected to RAM address input)
+
+So the cpu registers have to send and receive information from/to the data bus.
+the cpu registers also have to send information to the address bus.
+
+The connection between memory and the buses:
+- The RAM address input needs to be specified to know what memory address/register is selected,so
+  the memory has to able to receive addresses from the address bus
+
+- The whole purpose of RAM is to read/write data into it (exp: writing the result of sum of 2 nums
+  into RAM[16],reading the value stored in RAM[0]),so the input and output of the RAM/memory 
+  needs to be connected to the data bus
+
+- The memory that holds the instructions also needs to be connected to the control bus in order
+  to send instructions to the CPU/ALU
+
+So the memory have to receive information from the address bus
+the memory also have to send/receive information from/to the data bus
+the memory also have to send information to the control bus
