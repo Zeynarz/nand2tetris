@@ -1,5 +1,8 @@
 Elements
 ----------
+(NOTE: THE HACK COMPUTER USES THE HARVARD ARCHITECTURE,SO DATA AND INSTRUCTIONS ARE NOT
+STORED IN THE SAME MEMORY)
+
 The two main components of a computer is the CPU and the memory.
 (A computer is just a cpu and some memory)
 
@@ -8,11 +11,11 @@ the CPU is going to be composed of two main components:
 -the ALU
 -registers (A,D etc)
 
-The memory also has two parts:
--The part where data is stored
--The part where instructions are stored
+There is also two different memory
+-The memory where data is stored
+-The memory where instructions are stored
 
-Well what information is exchanged from/to the CPU and Memory?
+Well what information is exchanged from/to the CPU and Both Memory?
 
 Information Flows
 ------------------
@@ -56,17 +59,63 @@ The connection between cpu registers and the buses:
 So the cpu registers have to send and receive information from/to the data bus.
 the cpu registers also have to send information to the address bus.
 
-The connection between memory and the buses:
+The connection between memory (RAM and ROM) and the buses:
 - The RAM address input needs to be specified to know what memory address/register is selected,so
   the memory has to able to receive addresses from the address bus
 
 - The whole purpose of RAM is to read/write data into it (exp: writing the result of sum of 2 nums
   into RAM[16],reading the value stored in RAM[0]),so the input and output of the RAM/memory 
   needs to be connected to the data bus
-
-- The memory that holds the instructions also needs to be connected to the control bus in order
-  to send instructions to the CPU/ALU
+- The memory that holds the instructions (ROM) also needs to be connected to the control bus 
+in order to send instructions to the CPU/ALU
 
 So the memory have to receive information from the address bus
 the memory also have to send/receive information from/to the data bus
-the memory also have to send information to the control bus
+the instruction memory also have to send information to the control bus
+
+
+Fetch-Execute Cycle
+--------------------
+-Main cycle of the CPU (executing one instruction one after another)
+
+Fetch an instruction
+Execute the instruction
+
+How to fetch instruction from program memory?
+-Set the address input of the RAM chip to the location of the instruction we want to fetch 
+-Read from the RAM
+
+Example:
+We want to fetch instruction at address 100
+(in=?,load=0,address=100) -> RAM -> instruction
+read instruction outputed
+Instruction sent to control bus
+
+Normally the address of the instruction we want to fetch is stored in the Program Counter
+So (in=?,load=0,address=PC) -> RAM -> instruction
+(Program counter basically just keeps incrementing by one until there is a jmp)
+
+Executing the instruction that was fetched:
+-Different subsets of the bits control different parts of the operation
+(For example the C instruction has a few bits that control the computation,another few bits that
+control the destination etc)
+-Need to seperate these subsets(?)
+
+Fetch-Execute Clash
+--------------------
+(THIS ONLY HAPPENS ON VON NEUMANN ARCHITECTURE)
+During the fetch cycle, we need to set the address input of the RAM to the address in PC
+During the execute cycle,we need to set the address input of the RAM to the A register
+
+We want to set the address input of the RAM from two different sources (A register and PC)
+(One input,two sources)
+
+So we need a multiplexer, one input being the A register , one input being the PC register,and 
+the output connected to the address input of the RAM
+
+So:
+Mux(a=PC,b=AReg,out=MuxPcAReg ...)
+RAM16K(address=MuxPcAReg ...)
+
+So now during the fetch cycle,the multiplexer load bit is set to 0,and during the execute cycle
+the multiplexer load bit is set to 1

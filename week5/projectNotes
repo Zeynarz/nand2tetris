@@ -1,0 +1,14 @@
+Goal: Build - CPU (d)
+            - Memory unit(RAM,Screen,kbd combined) (d)
+            - Computer (d)
+
+(d) means done
+
+Implementation tips:
+CPU:
+Most of the load bits come from the instruction
+
+Memory:
+0-16383: data memory
+16384-24575: screen memory map
+24576: kbd memory map

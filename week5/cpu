@@ -1,0 +1,128 @@
+The Hack CPU
+--------------
+Function:
+-Execute the current instruction
+-Figure out which instruction to execute next
+
+The Hack CPU chip diagram: cpu.png 
+
+(DM) meaning connected from/to Data memory (RAM)
+(IM) meaning connected from/to Instruction memory (ROM)
+
+inputs:
+inM (16bits)         (DM) : The value of the memory register currently selected by A register. (M)
+instruction (16bits) (IM) : The value of the selected instruction memory register 
+reset(1 bit)       (user) : used to reset the cpu
+
+Example:
+Address 100: 1337
+if A register = 100, inM will be 1337
+
+Address 0: 0000000010100100
+if PC = 0; instruction = 0000000010100100
+
+outputs:
+outM (16bit)       (DM) : what value to write
+addressM (15bit)   (DM) : where to write
+writeM (1bit)      (DM) : load bit for RAM
+pc (15bit)         (IM) : address of next instruction
+
+Implementation
+-----------------
+Diagram: cpuImpl.png
+
+Instruction Handling:
+The instruction input is feeding into a multiplexer, the other input of the 
+multiplexer is the ALU output
+Output of the multiplexer is to the A register
+
+Load bit of A register is only true when it is an A-instruction or
+dest bits of C instruction is specify A register
+
+The multiplexer probably will choose ALU output when its a C-instruction
+and will choose instruction when its an A-instruction
+
+
+ALU Operation:
+A register feeding into a Multiplexer,the other input of the multiplexer is inM
+Output of the Multiplexer feeds into the ALU,the other input of the ALU is the D register
+(So there is A+D,D+M but no A+M)
+
+Load bit of the multiplexer is one of the bits in the instruction
+ALU control bits are also from the instruction
+Load bit of the D register is probably from the destination bits of the instruction
+
+ALU output is fed into the D register,the Multiplexer at the beginning, and outM
+(outM is probably connected to input of RAM)
+(writeM is probably connected to load bit of RAM, and writeM is probably set by destination bits
+from the instruction)
+(output of A register is probably connected to addressM)
+
+The ALU also has two one bit outputs zr and ng that specifies if the 16bit output of the ALU is
+zero or negative
+These two one bit outputs play a huge role in jmps
+
+
+Reset bit:
+The reset bit is connected to the reset input of the PC 
+So setting the reset bit would simply set the PC to 0 and restart the program
+
+Reset bit is set by user, so the reset bit is probably set by the reset button on 
+your computer case
+
+
+Control/Program Counter:
+PC logic:
+if reset: PC = 0
+else jmp succeeds: PC = A
+else: PC++
+
+output: adddress of next instruction
+
+The PC input is the A register.
+Reset bit is determined by user
+The load bits are determined by the jmp bits
+
+If the jmp expression turns out to be true,the load bit of the PC is probably set to 1 and 
+the value of A register is loaded into PC
+If the jmp expression turns out to be false,the increment bit of the PC is probably set to 1,
+and the load bit of the PC is probably set to 0
+
+(PC output of the CPU is probably connected to the address input of the ROM)
+
+
+And thats it for the CPU!
+
+------------------------------------------------------------------------------
+
+Some stuff about memory
+-----------------------
+The main memory/RAM is built from three chips
+-RAM
+-Screen
+-Keyboard
+            
+            load
+              |
+input ->    Memory  -> Output
+address ->
+
+
+Need a way to connect these 3 chips together maybe by using a Mux/Dmux etc
+So if address input of memory is 0,it accesses the RAM Chip,and if address input of memory is 
+16384, it accesses the Screen Chip
+
+(Screen is just RAM that display reads from)
+
+How 2 load programs/instructions into ROM
+--------------------------------------------
+-Plug and play (like cartridges that have programs burnt into them)
+-Simulation
+
+(ROM is just RAM that you can load programs in)
+(ROM is also read only and non-volatile)
+
+Hack Computer Implementation
+------------------------------
+Image: hackComp.png
+
