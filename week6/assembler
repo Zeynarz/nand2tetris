@@ -1,0 +1,108 @@
+Assembler
+------------
+Assembler just converts assembly/mneumonics to 1s and 0s that the CPU can understand
+@30 -> assembler -> 0000000000011110
+
+(Assembler is software)
+(The assembler runs on the home pc and create 1s and 0s that the Hack computer can understand,
+the assembler doesnt run on the Hack computer.(cross-compiler))
+(Maybe when we develop an os etc for the Hack computer and the Hack computer can run a high level language
+,we can also put the assembler on the Hack computer)
+
+The assembler needs to be able to handle:
+-white space
+-instructions
+-symbols
+
+Basic Assembler Logic
+----------------------
+Repeat:
+-Read next assembly language command
+-Break it into different fields
+-Look up binary code for each field
+-Combine the codes together to make one instruction
+-Output instruction
+
+Read next assembly language command:
+   -ignore whitespace
+   -put assembly command into a array of chars/string
+    
+Break it:
+    -Example:
+    Break Load R1,18 into
+    Load | R1 | R18, three different strings/arrays
+
+Look up binary code:
+    -Example:
+    (Lets say Load opcode is 11001)
+    Convert Load | R1 |    R18     into
+            11001| 01 | 000010010
+
+Combine:
+   combine 11001 | 01 | 000010010
+   into one string 
+   1100101000010010
+
+Output:
+    write 1100101000010010 into some file etc
+
+Handling Symbols
+------------------
+The assembler has to convert symbols to addresses too
+
+For example:
+It has to convert JMP loop to like JMP 673
+Or Load R1,weight into Load R1,R16
+
+To get the address of for example loop: 
+just find what number of instruction you are currently on/ how many instructions have already been outputed +1 +base instruction address
+
+To get the address of for example weight/find unallocated memory for variable: 
+just keep in track of how many variables have already been made,
+and add them to 16(random base variable address) 
+For example 0 variables have been made,then the address is 16, if 10 variables have been made,then the address is 26.
+
+
+We also have to keep these symbols and addresses in some kind of table/hashmap/dictionary too, 
+so everytime the assembler encounters a symbol that was already encountered once,
+it can just refer to the table
+(If first time encounter a symbol,use method above to convert symbol to address and store it in table)
+
+---------------
+|weight|5782  |
+|loop  |673   |
+----------------
+
+Forward references
+---------------------
+Forward references are jmps to labels/symbols that havent been encountered yet.
+Example:
+jmp loop
+...
+...
+Label loop:
+...
+...
+
+There are 2 ways to deal with forward references in the assembler,
+-leave it blank first until the label appears,then fix it 
+-Read the whole file two times,only pay attention to labels/symbols and fill up table 
+first time running through file,second time convert the assembly to 1s and 0s 
+(Second solution easier)
+
+Assembly and binary syntax
+--------------------------------
+(Already know this, just reminder)
+assembly :@value 
+binary   :0 + 15bit num
+
+assembly :dest = comp;jump
+binary   :1 1 1 a c1 c2 c3 c4 c5 c6 d1 d2 d3 j1 j2 j3
+
+Symbols
+R0 : 0,R1 : 1 ... R15:15
+SCREEN: 16384 KBD: 24576
+
+Label declaration: (label)
+Variable declaration: @temp
+

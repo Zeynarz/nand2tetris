@@ -1,0 +1,107 @@
+Translating A-instruction
+-----------------------------
+Instruction: @value
+Just convert value to 15 bit representation and add a 0 as most significant bit
+
+Translating C-instruction
+--------------------------
+Instruction: dest = comp;jump
+1 1 1 a c1 c2 c3 c4 c5 c6 d1 d2 d3 j1 j2 j3
+
+There are three different fields in the instruction,
+So we need a parser to decompose the instruction into three fields
+
+Example:
+Parsing MD = D + 1 into
+comp: D+1
+dest: MD
+jmp : null
+
+Once you parse it, you can simply translate each one of them and concatonate them together
+(You also have to concatonate the opcode, and two 1s (13th and 14th bit) as placeholders)
+comp: 0 0 1 1 1 1 1  
+dest: 0 1 1
+jmp : 0 0 0
+
+Concatonating them:
+1 1 1 0 0 1 1 1 1 1 0 1 1 0 0 0
+(1110011111011000)
+
+So to translate C-instructions:
+Parse instruction -> generate corresponding binary code -> concatonate them together
+
+Handling Symbols
+-----------------
+Three types of symbols:
+-variable symbols
+-label symbols 
+-pre-defined symbols (R15,SCREEN,KBD etc)
+
+There is also something called a symbol table which holds symbols and its corresponding values
+example:
+symbol  value
+--------------
+SCREEN  16384
+R16       16
+...     ...
+
+
+Handling pre-defined symbols:
+These symbols come to play only when it is an A-instruction
+@PRE_DEFINED_SYMBOLS
+
+Example: @SCREEN
+To translate this assembly instruction,simply replace SCREEN with its corresponding value (using symbol
+table),and add opcode 0 as most significant bit
+
+Handling Label symbols:
+Declared using (PLACEHOLDER)
+Lets say the label is declared after instruction 3,everytime the assembler encounters the label,it has 
+to replace the label with 4
+
+Example:
+0 @R1
+1 M = M + 1
+
+(LOOP)
+2 D = D + M
+3 D = D + 1
+...
+...
+
+So now everytime LOOP is encountered,it has to be replaced to 2 (using symbols table)
+So @LOOP will be replaced to @2
+
+Handling Variable symbols:
+Any symbol that is not pre-defined and is not defined else where using (PLACEHOLDER) is 
+treated as a variable
+Each of these variables are assigned a unique memory address,starting at 16
+
+The first time the assembler sees the variable in an instruction it has to:
+- Assign a unique memory address to it 
+- Replace the symbol in the instruction to the unique memory address
+- Make an entry in the symbol table for it so that the next time you encounter this variable, 
+  you can simply look up the table and replace it.
+
+So for example the assembler wants to translate @testVar:
+the assembler assign memory address 16
+replace @testVar to @16
+make an entry in symbol table: {"testVar": 16}
+
+Populating the symbol table (Putting entries in the symbol table)
+---------------------------------------------------------------------
+(Initialization)
+The first thing the assembler should do is create a symbol table and fill up the symbol table with 
+predefined-symbols
+
+(first pass)
+Then it should read through the whole assembly file looking for label declarations(left brackets)
+When it is reading through the file, it should also keep track of how many instructions are read so
+when it actually reads a label declaration,it will know what the label corresponds to 
+
+(second pass)
+Then the assembler should read through the whole assembly file again, and start translating the
+instructions. Everytime the assembler encounters a symbol in an A-instruction , it should look 
+up the symbol table. If there is no entry on the symbol table about the symbol,simply create a 
+new entry and treat it as a new variable
+
