@@ -1,0 +1,16 @@
+Goal: Hack Assembler (d)
+
+(d) means done
+
+-Should translate Hack assembly to Hack binary code
+test.asm -> assembler -> test.hack
+(assembler assumes that the .asm file is error free)
+
+Need:
+-Parser
+-Code (function that translates each field to corresponding binary value)
+-Symbol table
+-Main
+
+(The instructors recommend us to develop an assembler that can't deal with symbols first,then when the 
+assembler works fine,implement symbols in the assembler)
