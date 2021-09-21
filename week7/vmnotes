@@ -1,0 +1,88 @@
+Running high level language code on computers
+---------------------------------------------------------
+(nand2tetris p2 is about running high level language code on the Hack computer)
+
+Translation process:
+High level language -> compiler -> vm code 
+Vm code is then run on the virtual machine on the computer
+
+Why go through this many steps? why not just
+High level language -> machine languagae
+
+Reason:
+There are a lot of different computers in the world and all of them understand different machine
+languages
+For example the machine language of intel greatly differs from the machine language of ARM
+
+So if you were to straight up translate high level language into machine language, you would need
+to develop a different compiler for each different computer
+So you would need to develop a compiler for intel, a compiler for ARM, a compiler for MIPS etc etc
+
+Programming languages like Java worked around this by using two-tier compilation, which is
+
+Java code -> compiler -> vm code/bytecode
+Vm code then is ran on a java virtual machine on the computer
+
+the virtual machine is a program that runs on your computer that can execute vm code (?)
+
+This way for each new computer, you just have to develop a new virtual machine and not a new compiler
+So you only need to develop a jvm for intel, a jvm for ARM etc etc
+
+Developing a new jvm for each computer is much better than developing a new compiler for each computer
+This is because virtual machines are significantly easier to develop than compilers
+
+The Jack programming language (nand2tetris own high level language) also uses two tier compilation
+
+Jack -> compiler -> VM code -> VM implementation -> hardware
+
+It is designed to be able to be used on both
+-home pc
+-hack computer
+
+The instructors of the course dealt with the home pc part,so we can run Jack programs on our own pc
+with no problems
+
+But for the Hack computer, we have to develop everything so that we could compile Jack code into 
+Hack machine language
+
+Virtual Machine abstraction
+-----------------------------
+(Have not talked about vm implementation yet, will talk about it later)
+(These are just talking about what the virtual machine will be like)
+
+This course uses the stack machine 
+(The stack machine is a kind of virtual machine)
+
+The stack machine contains some memory, a stack and a few operations that we can apply to the stack
+There is a stack and some memory in the stack machine,and the vmcode is used to manipulate the stack 
+and the memory
+
+Virtual Machine code
+-----------------------
+(These vmcode are the output of the compiler)
+For example 
+Jack: x = 17 + 19
+Jack -> compiler -> output
+output: push 17
+        push 19
+        add
+        pop x
+
+
+There is the simple push and pop and there is also a stack pointer
+(push x, pop y etc)
+
+There are also operations like 
+add,sub,neg
+eq,gt,lt
+and,or,not
+
+In general, performing operations on the values on the stack is 
+- pop it out
+- perform operations on it
+- push result onto stack
+
+So for example if 'add' is executed
+two values are pop(ed), (we'll call these values x and y,first value poped is y,then second is x)
+then x+y will be performed and the result will be pushed
+
