@@ -3,11 +3,10 @@ Running high level language code on computers
 (nand2tetris p2 is about running high level language code on the Hack computer)
 
 Translation process:
-High level language -> compiler -> vm code 
-Vm code is then run on the virtual machine on the computer
+High level language -> compiler -> vm code -> VM Implementation/VM translator -> assembly -> assembler -> machine code 
 
 Why go through this many steps? why not just
-High level language -> machine languagae
+High level language -> machine language
 
 Reason:
 There are a lot of different computers in the world and all of them understand different machine
@@ -20,12 +19,11 @@ So you would need to develop a compiler for intel, a compiler for ARM, a compile
 
 Programming languages like Java worked around this by using two-tier compilation, which is
 
-Java code -> compiler -> vm code/bytecode
-Vm code then is ran on a java virtual machine on the computer
+Java code -> compiler -> vm code/bytecode 
+vmcode -> jvm (java virtual machine) -> machine code
 
-the virtual machine is a program that runs on your computer that can execute vm code (?)
 
-This way for each new computer, you just have to develop a new virtual machine and not a new compiler
+This way for each new computer,you just have to implement a new virtual machine and not a new compiler
 So you only need to develop a jvm for intel, a jvm for ARM etc etc
 
 Developing a new jvm for each computer is much better than developing a new compiler for each computer
@@ -33,7 +31,7 @@ This is because virtual machines are significantly easier to develop than compil
 
 The Jack programming language (nand2tetris own high level language) also uses two tier compilation
 
-Jack -> compiler -> VM code -> VM implementation -> hardware
+Jack -> compiler -> VM code -> VM Implementation/VM translator -> hardware
 
 It is designed to be able to be used on both
 -home pc
@@ -45,31 +43,24 @@ with no problems
 But for the Hack computer, we have to develop everything so that we could compile Jack code into 
 Hack machine language
 
-Virtual Machine abstraction
------------------------------
-(Have not talked about vm implementation yet, will talk about it later)
-(These are just talking about what the virtual machine will be like)
+The Virtual Machine
+----------------------
+(HAVE NOT TALKED ABOUT VM IMPLEMENTATION YET,WILL TALK ABOUT IT LATER)
+(think of the virtual machine as a black box first)
 
-This course uses the stack machine 
-(The stack machine is a kind of virtual machine)
+Imagine that there is a computer that is more complicated than the Von Neumman machine
+The computer has a stack, has several memory segments that is like RAM, and you can use vmcode
+to manipulate the stack and memory segments.
 
-The stack machine contains some memory, a stack and a few operations that we can apply to the stack
-There is a stack and some memory in the stack machine,and the vmcode is used to manipulate the stack 
-and the memory
+Don't worry about the implementation first,just imagine that such computer exists.
 
 Virtual Machine code
 -----------------------
-(These vmcode are the output of the compiler)
-For example 
-Jack: x = 17 + 19
-Jack -> compiler -> output
-output: push 17
-        push 19
-        add
-        pop x
+What vm code are there? What can we do with this imaginary computer(virtual machine)?
 
-
-There is the simple push and pop and there is also a stack pointer
+Stack operations:
+(stack pointer always points at next available location)
+Well there is the simple push and pop 
 (push x, pop y etc)
 
 There are also operations like 
@@ -86,3 +77,177 @@ So for example if 'add' is executed
 two values are pop(ed), (we'll call these values x and y,first value poped is y,then second is x)
 then x+y will be performed and the result will be pushed
 
+Memory segments:
+Besides the stack, the virtual machine also has memory segments.
+There are 8 total memory segments in the virtual machine, each one of them has its own purpose
+-argument -static -pointer -local -constant -this -that -temp
+
+For example,function arguments are placed in the argument memory segment etc etc
+
+Example:
+execute let static 2 = argument 1
+
+vmcode:
+push argument 1
+pop static 2
+
+
+VM Implementation
+-------------------
+Well it seems like this imaginary computer can do a lot of stuff.
+Can we possibly make this imaginary computer using our Von Neumman computer?
+
+So can we make a computer using our computer?
+(this is why its called a virtual machine,its a fake computer,its a computer made using a computer,
+not using logic gates and transistors etc)
+
+The Stack implementation
+-----------------------------
+The most important thing of the virtual machine is the stack.
+How can we implement it using our RAM?
+
+Well first we need a stack pointer.
+So the RAM[0] will be the stack pointer.
+
+What address is the stack going to be at?
+Well the base address of the stack is going to be at address 256
+
+Example:
+So if the stack pointer is pointing at 256 and push constant 17 is called
+Address 256 is going to contain 17 and stack pointer will now be 257
+
+
+Ok,so now we have some place in the RAM that is the stack
+Well the computer we imagined could execute commands to manipulate the stack,how can we implement that?
+How can we use the Hack machine language to manipulate the stack like push and pop? 
+
+So push constant 17 is actually just:
+*SP = 17 (pseudo-code)
+SP++
+
+So in assembly this would be:
+@17
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+Great!Now we know how to push to the stack!
+
+Memory Segments implementation
+---------------------------------
+The computer we imagined also had several memory segments
+
+How can we implement them?
+
+Well lets take the local memory segment and try to implement it first
+The local memory segment can technically be anywhere we want on the RAM,we just have to remember the
+base address so we can access it anytime
+
+RAM[1] will be used to store the base address of local
+(So if we decided to set that the local memory segment will start at address 1015,RAM[1]:1015)
+(RAM[1] is now also called LCL since it specifies the base address of local)
+
+Previously we only talked about pushing to the stack and nothing about pop,so now I'll discuss it
+Example:
+To execute 'pop local 2'
+It is simply 
+addr = LCL+2,SP--,*addr=*SP (pseudo-code)
+
+So 'pop local i'  is
+addr = LCL+i,SP--,*addr=*SP
+
+'push local i' is 
+addr = LCL+i,*SP=*addr,SP++
+
+Well now that we know how to implement the local memory segment, we can try implementing other 
+memory segments.
+
+The way to implement the argument,this,that memory segments are the same as local.
+RAM[2] will be used to store the base address of argument memory segment
+RAM[3] for 'this' memory segment, RAM[4] for 'that' memory segment.
+
+So to execute push and pop for these FOUR memory segments. (LCL,ARG,THIS,THAT)
+
+The pseudo code is just:
+addr = segment+i,SP--,*addr=*SP   (pop segment i)
+addr = segment+i,*SP=*addr,SP++   (push segment i)
+
+So  pop this 4 is :
+addr = this + 4,SP--,*addr=*SP
+
+Ok,we know that the local memory segment is used to store local variables, and the argument memory 
+segment is used to store the function arguments,but 
+
+What are the this and that memory segments used for anyways?
+Well when a method is called,
+the 'this' memory segment stores the properties of the object of the method (Method's Object's 
+Properties) (So if the method is Output.print() 'this' stores properties of Output)
+
+and if the method is processing an array,
+the 'that' memory segment is used to store the array entries of the array.
+(So if object.method([1,2,3]) , 'that' will be storing 1,2 and 3)
+
+So we talked about implementing 4 of the memory segments already,what about the other memory segments?
+
+The constant memory segment:
+So the reason this memory segment was made was to ensure the consistency the push and pop commands
+So instead of push 10 we have push constant 10, doing this will make parsing in the vm translator 
+easier
+
+Of course we arent going to actually set aside a memory from RAM to store constant 1,2,3,4,5,6,7
+So vmcode like 'push constant i' will be translated to:
+*SP=i,SP++
+
+(there is no pop command for constant)
+
+The static memory segment:
+This memory segment is used to store static variables,these variables are visible from every scopes
+Static variables are implemented differently from the local,args,this,that memory segments
+(not confirm why)
+
+pop static 5 will be translated to:
+//D=stack.pop (code omited)
+@fileName.5
+M=D
+
+so the VM translator will convert 'static i' to as assembly reference 'fileName.i'
+So the first static variable poped will be stored at RAM[16]
+
+The order of the appearance of 'static i' matters
+Example:
+Lets say a .vm file contains:
+...
+pop static 8 
+pop static 2
+...
+
+RAM[16] will now be referencing static 8
+RAM[17] will now be referencing static 2
+
+It is NOT RAM[24] that is referencing static 8 and NOT RAM[18] referencing static 2
+
+The temp memory segment:
+used to store temp variables (will only know full purpose while developing compiler)
+
+There are only 8 addresses used to store these temp variables, RAM[5] to RAM[12]
+
+pseudo-code for the push and pop of temp memory segment:
+addr = 5+i,SP--,*addr=*SP   (pop temp i)
+addr = 5+i,*SP=*addr,SP++   (push temp i)
+
+The pointer memory segment:
+(Will know full purpose when developing compiler)
+This is used to keep track of the base addresses of the this and that segments
+
+To keep track of the base address of this and that, simply push them onto the stack
+
+push pointer 0/1: *SP = THIS/THAT,SP++
+pop pointer 0/1 : SP--,THIS/THAT = *SP
+
+pointer 0: this
+pointer 1: that
+
+till 19:00 no notes
