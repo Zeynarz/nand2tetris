@@ -1,0 +1,63 @@
+There are two parts to implementing our imaginary computer
+First part (architecture): Allocate space in RAM for stack,local,args etc
+Second part (commands): Implement push and pop,add,sub etc
+
+The first part is simply trivial because you can just set the stack pointer to 256,and now that memory
+location is the stack. Set the local pointer to 300 and now that part of memory is the local memory 
+segment. This is done in the test script. (set RAM[2] 400 etc etc)
+
+The second part is implemeting commands so you can push and pop out of the stack etc.
+Well we previously already learned that we can implement these commands using the Hack assembly.
+So the vm translator is to convert for example 'push constant 1' to 
+@1
+D=A
+@SP
+...
+...
+
+Vm translator stuff
+-----------------------
+try to add comments at assembly file specifying which vm code was converted
+Example:
+push constant 2 -> vm translator ->
+//push constant 2
+@2
+D=A
+...
+...
+
+Standard mapping 
+-----------------
+(The standard addresses for the stack,memory segments etc)
+RAM[0] = stack pointer,RAM[1] = local pointer,RAM[2] = argument pointer
+RAM[3] = this pointer ,RAM[4] = that pointer
+
+RAM[5] - RAM[12] = temp memory segment
+RAM[13] - RAM[15] = general purpose registers
+RAM[16] - RAM[255] = static variables
+RAM[256] - RAM[2047] = stack
+
+Local,argument,this and that addresses are determined by the instructors in the test files
+
+Why follow standard mapping?
+- So testing will be easier 
+- Compatibility across different systems
+
+Remember to use the necessary symbols while developing the vm translator,
+meaning stack pointer use symbol SP,local pointer use symbol LCL etc etc
+
+
+Programming the VM translator
+-----------------------------------
+Usage should be
+python3 VMTranslator.py myProg.vm
+
+and myProg.asm will be created
+
+Should have a Parser and a CodeWriter
+Parser - parse 'push segment i' to 'push','segment','i'
+CodeWriter - convert 'push','segment','i' to assembly
+
+White space and comments should also be ignored
+Parser also determines if the command is arithmetic,push,pop,call,ret etc etc
+

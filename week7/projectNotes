@@ -1,0 +1,25 @@
+Objective: Build a basic VM translator that will be extended in project 8
+
+(d) means done
+NOTE: VM translator assumes the .vm file has no syntax errors
+
+Commands to implement:
+Arithmetic / Logical commands:
+    add
+    sub
+    neg
+    eq
+    gt
+    lt
+    and
+    or
+    not
+
+Memory access commands:
+    pop segment i
+    push segment i
+
+
+To test VM Translator:
+translate abc.vm file and get the abc.asm file
+load abc.asm file into CPU emulator and load abc.tst file as test file too
