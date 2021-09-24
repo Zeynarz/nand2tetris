@@ -1,6 +1,8 @@
-Objective: Build a basic VM translator that will be extended in project 8
+Objective: Build a basic VM translator that will be extended in project 8 (d)
+BasicTest (d) PointerTest (d) StaticTest (d) SimpleAdd (d) StackTest(d) 
 
-(d) means done
+
+(d) means done/passed
 NOTE: VM translator assumes the .vm file has no syntax errors
 
 Commands to implement:
