@@ -1,0 +1,28 @@
+Function implementation
+-------------------------
+How can we make the function abstraction work?
+
+call:
+    -Call has to jump to the callee's function
+
+    -Call has to somehow pass the arguments to the called function. It has to pass the values on the 
+     caller's stack to the callee's argument memory segment.
+
+    -After the function is executed,it has to return to its original location. For example if address
+     main 16 is call mult, after mult is finished executing, it has to return to main 17. 
+
+     So call has to remember the return address
+
+    -When you call a new function,you get a new stack,new memory segments etc. So when the callee 
+     finishes executing, it has to somehow get back the caller's stack,memory segments etc.
+
+     So the caller's stack,memory segments etc has to be saved
+
+return:
+    -Return has to jump to the return address 
+
+    -Return has to return the computed value by callee to caller
+
+    -Return has to reinstate the caller's stack and memory segments
+
+(It is required that the callee push a value on to the stack before returning)

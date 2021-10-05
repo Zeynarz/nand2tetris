@@ -1,0 +1,158 @@
+In the previous module, we only implemented arithmetic logical commands and memory segment commands.
+We still havent implemented function calls and branching (if,else) etc which play a pretty big part in 
+high level languages
+
+Braching Abstraction
+---------------------
+So far before branching,our vm program can only be completely linear,but with branching we can control 
+the flow of the program and executes gotos etc
+
+What branching vm commands are there? 
+(Will only worry about the implementation of these vm commands later,just know that these are the vm 
+commands we want to implement)
+
+label label,goto label,if-goto label
+
+At the low level, there are two types of branching
+-Unconditional branching -Conditional branching
+
+Whats the difference? Lets use an example
+
+Example:
+
+High level program:
+while !(n > y){
+    n++;
+}
+
+(After going through compiler)
+Pseudo Vm code:
+label LOOP:
+    push n
+    push y
+    gt
+    if-goto ENDLOOP
+    push n
+    push 1
+    add
+    pop n
+    goto LOOP
+label ENDLOOP
+
+(How the compiler generates this we will talk about in the other modules)
+
+
+An example of unconditional branching is goto LOOP
+The computer/vm will always jump after executing this vm command
+
+
+An example of conditional branching is if-goto ENDLOOP
+The condition(true/false) must be pushed to the stack before the if-goto command
+
+When the computer/vm executes the if-goto command,
+it will pop a value and jump depending on the value poped.
+(If the value is true,jump, if the value is false, dont jump)
+
+
+Functions Abstraction
+-----------------------
+What function commands are there?
+function functionName, call functionName nArgs, return
+
+What does it look like to call a function?
+
+Example:
+
+High-level program:
+sqrt(x - 17 + x * 5)
+(x is a variable)
+
+
+Pseudo VM code:
+push x
+push 17
+sub
+push x 
+push 5
+call Math.multiply 2
+add
+call Math.sqrt 1
+
+(Math.multiply is implemented in the operating system part)
+
+Once Math.multiply is called,it will replace x and 5 on the stack to x*5
+-----                       ------
+| x |  -> Math.multiply ->  | x*5|
+| 5 |                       ------
+-----                       
+
+
+Applying a primitive operator(add,sub etc) and calling a function have the same look-and-feel
+
+If you call a function that expects three arguments. You push the three arguments onto the stack then
+call the function. After the function is called,the three arguments will be replaced with the result of 
+the function
+
+The 2 in call Math.multiply 2 is used to represent the amount of arguments used for Math.multiply
+
+
+Well what does it look like to define/declare a function?
+
+Example:
+Well lets say we want to implement our own version of multiply
+
+High-level program:
+int mult(int x,int y){
+    int sum = 0;
+    int n = 1;
+    
+    while !(n > y){
+        sum += x;
+        n++
+    }
+    return sum;
+}
+
+(NOTE: this implementation of multiplication is very ineffecient)
+
+Real Final VM Code:
+function mult 2
+    push constant 0
+    pop local 0
+    push constant 1
+    pop local 1
+label LOOP
+    push local 1
+    push argument 1
+    gt
+    if-goto END
+    push local 0 
+    push argument 0
+    add
+    pop local 0
+    push local 1
+    push constant 1
+    add pop local 1
+    goto LOOP
+label END
+    push local 0
+    return
+
+The first vm command in the function declaration is function mult 2
+The 2 in function mult 2 represents the amount of local variables used in mult
+
+So lets say that this mult function is called by main.
+What would happen?
+
+Diagram: functionExecuting.png
+
+Diagram Description:
+(If main called mult, main would be the caller, and mult would be the callee)
+
+After line 0 of mult is executed,you would get a new stack,a new argument segment and a new local segment.
+The local memory segment has exactly 2 local variables because the function declaration command 
+specified that there are 2 local variables 
+
+The argument memory segment in mult is filled with the arguments that were pushed onto the stack in main
+
+When return is called,the topmost value of the mult stack would replace the values in the main stack
