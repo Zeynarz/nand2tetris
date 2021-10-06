@@ -1,7 +1,6 @@
-Function implementation
--------------------------
-How can we make the function abstraction work?
-
+Function implementation todo
+----------------------------------------------
+(Things to do to make function abstraction work)
 call:
     -Call has to jump to the callee's function
 
@@ -26,3 +25,197 @@ return:
     -Return has to reinstate the caller's stack and memory segments
 
 (It is required that the callee push a value on to the stack before returning)
+
+Function call and return implementation preview
+-------------------------------------------------
+Normally a computer program consists of many functions
+The calling chain is like: main > quadraticRoot > mult > ...   
+
+In the stack machine abstraction,everytime you call a function,
+you get a new working stack + memory segments
+
+The working stack and memory segments of a function is called the function's state
+
+The state(new working stack + memory segments) of a function is:
+-Created when the function is called and starts running
+-Maintained as long as the function is executing (When the function calls another function,we have
+to save the state of the caller)
+-Recycled when the function returns
+
+
+When the callee function finishes executing,it has to return to the caller's state. (the callee's state 
+can be recycled now because it is not needed)
+
+So for example main > quadraticRoot > mult
+(> means calls)
+
+During mult,the state of quadraticRoot and main must be saved. (So there are three states present)
+When mult is finished executing,the state of quadraticRoot has to be restored and the state of mult
+can be recycled
+
+So how can we implement this? How can we save and maintain all the states of the functions in the calling chain?
+
+Well there is an observation, the calling pattern is LIFO(Last in first out)
+Only the latest called function can return
+So if main > quadraticRoot > mult
+
+The first function called is main, but the last function that can return is main
+The last function called is mult, but the first function that can return is mult
+
+What else is LIFO and behaves exactly like this? The Stack!
+
+Lets look again at the big picture/ what we want / athe bstract stand point 
+Example: computing mult(17,212)
+
+Caller's stack (before)               Caller's stack (after)
+-------                                  -------
+|value|                   call mult 2    |value|
+|.....|                   ----------->   |.....|
+|17   |                                  |3604 |
+|212  |                                  -------
+-------
+
+The function's arguments have been replaced with the function's return value
+
+Now lets look at the details and what happens when 'call mult 2' is called
+
+Function call and return: call implementation
+----------------------------------------------
+When call is executed,the values on top of the stack are the arguments, and we can find the start
+of the arguments using the nArgs in 'call foo nArgs'
+
+since we know where the arguments are on the stack, I can just set the ARG pointer there
+So now
+        -------
+        |value|
+        |.....|
+ARG ->  |17   |
+        |212  |
+SP ->   |...  |
+        -------
+
+We know now that whatever is above the ARG pointer is the working stack of the caller, and whatever
+below the ARG pointer is the arguments of the callee
+
+Well remember that we have to also save the state of the caller before jumping to the callee function
+The state of the caller is the working stack of the caller and the memory segments of the caller
+
+Well we already know that the working stack of the caller is above ARG and it is safe where it is.
+So all we have to save is the memory segments of the caller.
+
+We also have to save the return address of the caller's code so the callee knows what address to 
+return next/what instructions to execute next
+(So if address 16 is 'call foo nArgs',the return address is 17)
+
+Taken together,we call these things the function's frame.
+
+        --------------
+        |value       |
+        |.....       |
+ARG ->  |17          |
+        |212         |
+        |ret address | <--
+        |saved LCL   |   |
+        |saved ARG   |   |-- function's frame
+        |saved THIS  |   |
+        |saved THAT  | <--  
+SP ->   |.....       | 
+        --------------
+
+Now,the argument segment of the callee is set up,and the state of the caller is saved, we can finally
+jump to execute the callee(mult).
+
+now what happens when the first line of mult (function foo nVars) is executed?  
+
+Function call and return:function implementation
+--------------------------------------------------
+Before running the other code in the function, we have to first set up the local memory segment 
+function foo nVars deals with this
+
+'function foo nVars' will create a local variable segment according to nVars and initialize them to 0
+
+So if 'function mult 2'
+
+        --------------
+        |value       |
+        |.....       |
+ARG ->  |17          |
+        |212         |
+        |ret address | <--
+        |saved LCL   |   |
+        |saved ARG   |   |-- function's frame
+        |saved THIS  |   |
+        |saved THAT  | <--  
+LCL ->  |     0      | 
+        |     0      |
+SP  ->  |......      |
+        --------------
+
+Now that this is done,the other code in the function can continue executing without any problems
+
+Now what happens when all the code in the function finish executing, and the function returns?
+
+Function call and return:return implementation
+--------------------------------------------------
+(Remember that a return value must be pushed onto the stack before returning,so the topmost value of the
+stack before returning is always the return value)
+
+Before return:
+        --------------
+        |value       |
+        |.....       |
+ARG ->  |17          |
+        |212         |
+        |ret address | <--
+        |saved LCL   |   |
+        |saved ARG   |   |-- function's frame
+        |saved THIS  |   |
+        |saved THAT  | <--  
+LCL ->  |     0      | 
+        |     0      |
+        |3604(retval)|
+SP  ->  |......      |
+        --------------
+
+First of all,we have to take the topmost value of the stack which we know is the ret value to ARG 0
+(This is because remember that what we want is the caller's arguments to be replaced with the 
+callee's return value)
+
+Then we have to restore the segment pointers of the caller. (We can simply do this by poping the 
+function frame)
+We also have to set the SP to just after ARG 0 so just after the return value
+
+After all that,we can finally jump to the return address and continue executing the caller's code
+
+After return:
+        --------------
+        |value       |
+        |.....       |
+        |3604(retval)|
+SP  ->  |......      |
+        --------------
+
+
+Extra notes
+------------
+The global stack is the whole stack that contains all the states of all the functions in the calling chain
+
+The block is what we can call "the world of the currently running function
+EXAMPLE:
+        --------------
+        |value       |
+        |.....       |
+ARG ->  |17          | <------------------------
+        |212         |                         |
+        |ret address | <--                     |
+        |saved LCL   |   |                     |
+        |saved ARG   |   |-- function's frame  |
+        |saved THIS  |   |                     |--- "block"
+        |saved THAT  | <--                     |
+LCL ->  |     0      |                         |
+        |     0      |                         |
+        |3604(retval)|                         |
+SP  ->  |......      | <-----------------------|
+        --------------
+
+The global stack contains many of this such "blocks"

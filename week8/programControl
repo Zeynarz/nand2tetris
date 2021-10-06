@@ -150,6 +150,8 @@ Diagram Description:
 (If main called mult, main would be the caller, and mult would be the callee)
 
 After line 0 of mult is executed,you would get a new stack,a new argument segment and a new local segment.
+(VERY IMPORTANT: This is one of the features of the imaginary computer/stack machine,everytime you enter a function, you get an new empty stack, new memory segments like local,args etc etc.)
+
 The local memory segment has exactly 2 local variables because the function declaration command 
 specified that there are 2 local variables 
 
