@@ -158,7 +158,7 @@ Now what happens when all the code in the function finish executing, and the fun
 Function call and return:return implementation
 --------------------------------------------------
 (Remember that a return value must be pushed onto the stack before returning,so the topmost value of the
-stack before returning is always the return value)
+stack before returning is always the return value.This has to be done even if it is a void function)
 
 Before return:
         --------------

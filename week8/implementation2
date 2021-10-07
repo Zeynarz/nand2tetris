@@ -1,0 +1,92 @@
+Function Call and Return Implementation (Continued)
+------------------------------------------------------
+Well now that we have a plan for the implementation,we just have to think of the assembly
+
+
+--------------------------------------------------------------------------------------------
+
+VM Command : call functionName nArgs
+
+The VM Command should (this is already mentioned previously):
+-Reposition ARG pointer to caller's pushed arguments
+-Save state of caller
+-Jump to callee's code
+
+(In reality push should be @SP,A=M .....,but because this is pseudo code and for readibility sake,
+ I will write push)
+
+Pseudo Assembly Code: 
+(This is what 'call functionName nArgs' is equivalent to)
+
+    //Save the state of the caller
+    push returnAddress //using the label declared below
+    push LCL
+    push ARG
+    push THIS
+    push THAT
+        
+    //Reposition ARG pointer to caller's pushed arguments
+    ARG = SP - 5 - nArgs
+    
+    //Reposition LCL
+    LCL = SP
+    
+    goto functionName
+
+(returnAddress) //label declared for return address 
+
+------------------------------------------------------------------------------------------------
+
+VM Command : function functionName nVars
+
+The VM Command should (this is already mentioned previously):
+-Setup local memory segments
+
+Pseudo Assembly Code: 
+(This is what 'function functionName nVars' is equivalent to)
+
+(functionName) //declare a label for function entry
+    repeat nVars times:
+    push 0
+
+
+------------------------------------------------------------------------------------------------
+
+VM Command : return
+
+The VM Command should (this is already mentioned previously):
+-Set argument 0 to ret value
+-Restore the state of the caller
+-Set SP to argument 1 (Right after ret value)
+-Ret to caller's code
+
+Pseudo Assembly Code: 
+(This is what 'return' is equivalent to)
+
+    endFrame = LCL //endFrame is a temporary variable
+    retAddr = *(endFrame - 5) //retAddr is also a temporary variable
+    
+    //Set arg 0 to ret val
+    *ARG = pop()
+    
+    //Set SP to right after ret val
+    SP = ARG + 1
+    
+    //Restore the state of the caller
+    THAT = *(endFrame - 1)
+    THIS = *(endFrame - 2)
+    ARG  = *(endFrame - 3)
+    LCL  = *(endFrame - 4)
+    
+    //Ret to caller's code
+    goto retAddr
+
+
+Extra note:
+The retAddr is stored in a temporary variable before everything else is because if the function has 
+no arguments,the next command which is *ARG = pop() will override the return address.
+
+------------------------------------------------------------------------------------------------
+
+
+(next note is extraNotes)

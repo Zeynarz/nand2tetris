@@ -1,0 +1,39 @@
+The big picture: program compilation and translation
+-------------------------------------------------------
+myProg directory contains Foo.jack and Bar.jack
+
+Compiler compiles the whole myProg directory
+
+now myProg directory contains Foo.vm and Bar.vm
+
+VM Translator translates the whole myProg directory
+
+now myProg directory only have one assembly file which is myProg.asm
+
+Booting
+--------
+There are a few conventions/rules
+
+One file in any VM program directory is expected to be named Main.vm and one VM function in 
+Main.vm is expected to be named main
+
+When the VM implementation starts running,or is reset, it starts by calling the argument-less OS function
+Sys.init
+
+Sys.init then calls Main.main and enters an infinite loop
+
+Bootstrap code:
+The first two instructions that the computer should execute is
+
+SP = 256
+call Sys.init (in assembly)
+
+Standard mapping of Hack
+-------------------------
+address 0-15 : pointers and registers
+address 16-255 : static variables
+address 256-2047 : stack
+address 2048-16383: heap
+address 16384-24576: memory mapped I/O
+
+
