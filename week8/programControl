@@ -57,7 +57,7 @@ it will pop a value and jump depending on the value poped.
 Functions Abstraction
 -----------------------
 What function commands are there?
-function functionName, call functionName nArgs, return
+function functionName nVars, call functionName nArgs, return
 
 What does it look like to call a function?
 

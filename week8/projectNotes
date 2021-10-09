@@ -1,0 +1,15 @@
+Goal: Finish Building the VM Translator 
+      -BasicLoop(d)   -FibonacciSeries(d)
+      -SimpleFunction(d)   -NestedCall(d)    -FibonacciElement(d)   -StaticsTest(d)
+
+(d) means done
+
+NOTE:VM Translator assumes that the .vm file is error free
+
+
+There is only a sys.init starting from NestedCall
+
+So most probably after adding branching features, test BasicLoop and FibonacciSeries
+Then after adding function and ret, test SimpleFunction
+Then after adding call, add the bootstrap code and add translate directory feature
+then can start testing with the other tests
