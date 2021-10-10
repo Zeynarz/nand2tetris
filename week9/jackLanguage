@@ -1,0 +1,113 @@
+Jack is a simple Java-like language,it is Object-based but no support for inheritance
+
+Hello World in Jack:
+
+class Main{
+    function void main(){
+        //Print text using standard library
+        do Output.printString("Hello World!");
+        do Output.println();
+        return;
+    }
+}
+
+A Jack program is a collection of one or more classes. (There must be a 'Main' class,and 'Main' must have 
+a main function)
+
+The first function of the program that is executed is Main.main
+Entry point: Main.main
+
+Arrays:
+    -Array is implemented in the standard library
+    -Jack arrays are not typed,so int values and bool values can be in the same array
+
+Jack data types:
+    Primitive:
+        -int
+        -char
+        -bool
+
+    Class types:
+        -OS:Array,String
+        -Whatever the programmer invents
+
+Object-based programming using Jack
+----------------------------------------
+class Fraction{
+    field int numerator,denominator;
+}
+
+field = properties, so the numerator and denominator are the properties of a Fraction object
+
+The only way to access properties from outside the class are through accessors, stuff like
+
+obj = Fraction.new(3,12)
+do Output.printInt(obj.numerator)
+
+is NOT allowed in Jack
+
+
+Constructor are used to create new objects
+Example:
+
+constructor Fraction new(int x,int y){
+    let numerator = x; let denominator = y;
+    return this; //return the base address of the new object
+}
+
+All constructors must return the base addr of the newly created object. So if
+
+obj = Fraction.new(3,12);
+
+If the object is stored at address 4912
+
+obj = 4912 (pointer)
+
+All methods and functions must return some value too.
+
+
+All classes that can create an object (all classes that have atleast 1 constructor), must have a method to
+'free' the object's memory. (This can be done using an OS function Memory.Dealloc())
+
+So that if an object is not needed anymore,
+obj.dispose() can be used to free up memory for other objects
+
+(Jack doesnt have a garbage collector)
+
+
+All of the objects properties etc are stored in the heap.
+
+Example:
+ 
+let a = Fraction.new(2,3);
+let b = Fraction.new(1,5);
+
+//a and b are local variables
+
+Remember that a and b are actually pointers
+
+On the stack, a might be = 4112, and b might be = 15087
+
+And at address 4112, the value will be 1
+    at address 4113, the value will be 5
+
+And at address 15087,the value will be 2
+    at address 15088,the value will be 3
+
+Visual representation of RAM
+
+                -------
+                |...  |
+LCL ->          |4112 | (a)
+                |15087| (b)
+                |...  |
+addr 4112 ->    |  1  |
+addr 4113 ->    |  5  |
+                |...  |
+addr 15087 ->   |  2  |
+addr 15088 ->   |  3  |
+                |...  |
+                -------
+
+
+All of this stuff is handled by the compiler that uses OS calls to do this(most probably smthg like malloc) 
