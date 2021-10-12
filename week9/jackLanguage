@@ -63,6 +63,8 @@ If the object is stored at address 4912
 
 obj = 4912 (pointer)
 
+So obj is a pointer.
+
 All methods and functions must return some value too.
 
 
@@ -111,3 +113,166 @@ addr 15088 ->   |  3  |
 
 
 All of this stuff is handled by the compiler that uses OS calls to do this(most probably smthg like malloc) 
+
+
+List Processing in a nutshell 
+-------------------------------
+(NOTE: This is explained much more clearer below, this is just to give a brief introduction)
+List is a class in Jack (a class that has a constructor)
+List also has 2 methods,print and dispose.
+
+The List in Jack is not rly an array in memory. The properties of a List is data and a List ptr.
+A List object is linked together with other List objects to form a linked list.
+
+Example:            Abbreviated as:
+(5,null)            (5)
+(3,(5,null)         (3,5)
+(2,(3,(5,null)))    (2,3,5)
+
+
+List processing: Creation
+--------------------------
+List constructor:
+
+class List {
+    field int data;
+    field List next; //List ptr
+
+    constructor List new(int car,List cdr){
+        let data = car;
+        let next = cdr;
+        return this;
+    }
+}
+
+So storing (2,3,5) will be:
+
+var List v;
+
+let v = List.new(5,null); // p1 (phase 1)
+let v = List.new(3,v); // p2
+let v = List.new(2,v); // p3
+
+At p1,
+A new List object is created with data = 5,next = null. The address of this object is stored in v
+
+At p2,
+Another List object is created with data = 3, next = address of object created at p1. The address of this
+object is stored in v
+
+At p2,
+Another List object is created with data = 2, next = address of object created at p2. The address of this
+object is stored in v
+
+So now there are 3 List objects in memory
+An object at addr 1, with data = 5 ,next = null
+An object at addr 2, with data = 3 ,next = addr 1
+An object at addr 3, with data = 2 ,next = addr 2
+
+(-> means pointing at)
+v -> addr3 -> addr2 -> addr1 -> null
+
+Lets say that addr1 = 4000,addr2 = 5000,addr3 = 6000
+
+Visual representation:
+
+                -------
+                |...  |
+LCL ->          |6000 | (v)
+                |...  |
+addr 4000 ->    |  5  |
+addr 4001 ->    |null |
+                |...  |
+addr 5000 ->    |  3  |
+addr 5001 ->    |4000 |
+                |...  |
+addr 6000 ->    |  2  |
+addr 6001 ->    |5000 |
+                |...  |
+                -------
+
+
+List processing: sequential access
+-----------------------------------
+Will demonstrate sequential access using the List print method
+
+print method:
+
+class List{ 
+    method void print(){
+        var List current; //Create a List ptr
+        let current = this; 
+        
+        while (~(current == null)){
+            do Output.printInt(current.getData());
+            do Output.printChar(32); //print a space
+            do current = current.getNext();
+        }
+
+        return;
+    }
+}
+
+'this' in a method is the object the method is called upon.
+So if v.print()
+    v is 'this'
+
+    if obj.print()
+    obj is 'this'
+
+
+Let's continue where we left off earlier.
+If v.print() is called:
+    current = v
+
+    so now current is pointing at the List object/addr 3.
+    after printing the data in the List object, current points to addr 2
+
+    then the data in the List object stored at addr 2 is printed.
+    After that current points to addr1, and prints the data of the object stored at addr1.
+    
+
+
+(When you call a method,you actually implicitly pass the object as a parameter to the method)
+(So, prob the vmcode would prob be smthg like, push v,call print)
+
+
+List processing : recursive access
+-------------------------------------
+Will demonstrate recursive access using dispose method
+
+dispose actually recycles the whole linked list,not only the List object given
+so List obj1 -> List obj2 -> List obj3
+
+if List obj1.dispose(), List obj2 and obj 3 will get recycled as well.
+
+dispose method:
+class List {
+    method void dispose(){
+        if (~(next == null)){
+            do next.dispose(); 
+        }
+
+        do Memory.deAlloc(this);
+        return
+    }
+}
+
+In dispose(),'next' is the 'next' property of 'this'
+So if 
+
+test = List.new(12,null)
+test.dispose()
+
+'next' is null
+
+Continuing where we left off earlier,
+If v.dispose() is called:
+    next = addr2
+    After the if condition, addr2.dispose() is called
+
+    now next = addr1
+    After the if condition, addr1.dispose() is called
+    
+    now next = null
+    And Memory.deAlloc(addr1) is called, then Memory.deAlloc(addr2) is called, then Memory.deAlloc(v) is called

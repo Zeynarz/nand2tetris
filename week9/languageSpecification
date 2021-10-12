@@ -1,0 +1,85 @@
+Syntax of the Jack Language
+----------------------------
+White space/comments:
+    White space is ignored by the Jack compiler
+
+    There are three types of comments
+    // Comment to end of line
+    /* Comment until closing */
+    /** API documentation comment */
+   
+keywords:
+    Program components: class,constructor,method,function
+    Primitive types: int,boolean,char,void
+    Variable declaration: var,static,field
+    Statements: let,do,if,else,while,return
+    Constant values: true,false,null
+    Object reference: this
+
+Symbols:
+    symbols are the (),{} [] etc etc
+    Jack practically have the same symbols as other programming languages
+
+Constants:
+    Example of constants are 
+    String constants like "Hello World" 
+    Integer constants like 0,12,1337
+    Boolean constants like true,false and null
+
+    All integer constants must be positive,negative integers like -15 are not constants but actually expressions
+
+Identifiers:
+    Identifiers are the names that the programmer give to variables,functions etc
+    Example identifiers: length,Keyboard.readInt(),main(),sum 
+
+Data types
+-----------
+The Jack language is very weakly typed, it has very loose typing rules
+
+Primitive data types:
+    -int
+    -char
+    -bool
+
+Class types:
+    -OS types: String,Array
+    -User-defined types: Fraction,List,...
+
+
+Type Conversion
+
+Characters and integers are converted into each other:
+    var char c; let c = 65; //"A"
+    //c = 'A' is not supported by Jack
+
+An integer can be assinged to pointers:
+    var Arr arr; //Create a pointer variable
+    let arr = 5000;
+    let arr[100] = 17; //memory address 5100 is set to 17
+
+An object can be converted into an Array,and vice versa:
+    
+    Example 1:
+    var Fraction x;
+    var Array arr;
+    let arr = Array.new(2);
+    let arr[0] = 2; let arr[1] = 5;
+    let x = arr;
+    do x.print() // 2/5 will be printed
+
+    Example 2:
+    class Point3D{
+        field int x,y,z;
+        ...
+    }
+
+    var Point3D p;
+    var Array arr;
+    let p = Point3D.new(0,0,0);
+    let arr = p;
+    let arr[1] = 5;
+    
+    p.y is now assigned to 5
+
+
+
