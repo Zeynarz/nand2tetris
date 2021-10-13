@@ -53,7 +53,7 @@ Characters and integers are converted into each other:
     //c = 'A' is not supported by Jack
 
 An integer can be assinged to pointers:
-    var Arr arr; //Create a pointer variable
+    var Arr arr; //Create a pointer variable, initialized to null
     let arr = 5000;
     let arr[100] = 17; //memory address 5100 is set to 17
 
@@ -81,5 +81,305 @@ An object can be converted into an Array,and vice versa:
     
     p.y is now assigned to 5
 
+Classes
+---------
+Each class is stored in a seperate .jack file
+(The class name should be the same as the file name, so if the class name is Foo,the file name should
+be Foo.jack)
 
+The class name's first character must be an uppercase letter
+
+(subroutine includes constructors,methods and functions)
+
+There are two types of classes:
+-Classes that provide functionality
+-Classes that represents entities/objects
+
+Classes that provide functionality:
+    An example of this kind of classes is the Math class that the OS provides
+    Math Class contains:
+        function int abs
+        function int multiply
+        function int divide
+        function int sqrt 
+        ...
+
+    These types of classes only contains functions.
+    No constructors,methods,fields
+    These classes are essentially libraries/modules containing functions.
+
+Classes that represents entities/objects:
+    Examples of this kind of class: Fraction,List,String ...
+    These classes are essentially blueprints for creating objects
+    
+    These classes contain constructors and methods.
+    They can also contain functions,but these functions are recommended for "helper" purpose only
+    
+    These "helper" functions should only be used inside the class,and not used by other classes
+
+    Best practice: Don't mix library functionality and object representation in the same class
+    
+    Example of a class that violates the best practice:
+        class Fraction{
+            constructor Fraction new(int x,int y){
+                ...
+            }
+            
+            method void reduce(){
+                ...
+                //gcd is called in here
+            }
+
+            function int gcd(int a,int b){
+                //returns the greatest command divisor of a and b
+            }
+        }
+
+        This program won't have any problems compiling and running,but from a design stand this is 
+        a bad solution because 'gcd' is a very general and useful function that can be used outside
+        of the 'Fraction' class
+
+        For example a class dealing with prime numbers etc would definetely want to be 
+        able use this function
+
+        Therefore it would make sense to declare the function in another class like Math, which is a
+        class that provides functionality
+    
+    Example of "helper" functions/Example of classes that doesnt necessary violate the best practice:
+        class Car {
+            constructor Car new(int torque,int engineSpeed,...){
+                ...
+            }
+
+            method void printHorsePower(){
+                //calcHP (calculate horse power) is called here
+            }
+
+            function int calcHP(int torque,int engineSpeed){
+                ...
+            }
+        }
+
+        calcHP in this case is a "helper" function. (I think) It doesnt violate the best practice 
+        because it is only useful in the Car class and provides no use for any other classes
+
+
+A Jack program is a collection of one or more Jack classes.
+One of the classes must be named 'Main', and inside 'Main',there must a function named 'main'.
+
+
+The Jack's standard class library / OS contains 8 different classes
+Two of them are classes that represents entities/objects. (String,Array)
+Six of them are classes that provide functionality. (Math,Output,Screen,Keyboard,Memory,Sys)
+
+What is the purpose of the Jack's standard class library/OS?
+-It closes gaps between high level programs and host hardware. For example,reading input from a keyboard
+ in high level program is as easy as typing Keyboard.readInt()
+
+-It provides efficient implementations of commonly-used functions like 'mult' and 'divide'
+
+-It provides efficient implementations of commonly-used data types like 'String' and 'Array'
+
+
+Subroutines,Variables,Expressions and more
+--------------------------------------------
+Subroutine declaration:
+    constructor | method | function type subroutineName (parameter-list){
+        ...
+    }
+
+the 'type' can be either primitive data types,or a class name
+
+Constructors: create new objects
+Methods: operate on the current object
+Functions: static methods
+
+All subroutines must return a value.
+(Other languages also have this rule,some just do it implicitly)
+
+
+There can be 0,1 or more constructors in a class
+the 'type' in constructor declaration must be the name of the constructor's class , like:
+
+constructor List new(...){
+    ...
+}
+
+constructors must return the address of the object created (return this)
+
+
+Variables:
+    All variables must be declared before they are used
+    There are 4 kinds of variables:
+    -static variables:
+        class-level variables
+        (Meaning that the scope = the class in which they are declared in)
+
+    -local variables:
+        subroutine-level variables
+        (Meaning that the scope = the subroutine in which they are declared in)
+
+    -field variables:
+        object properties
+
+    -parameter variables:
+        used to pass variables to subroutines
+
+
+Statements:
+    let:
+        let varName = expression
+
+    if:
+        if statement
+
+    while:
+        while loop
+
+    do:
+        do function-or-method-call
+
+    return:
+        return expression; or return; (return; = return null;)
+
+
+Expressions:
+    Expressions include:
+    -constants
+    -a variable name in scope
+    -'this'
+    -a subroutine call that returns a non-void type
+    -An expression that has a '-' or '~' in front:
+        - expression meaning arithmetic negation
+        ~ expression meaning boolean negation
+
+    -Arithmetic,boolean and comparison operators:
+        arithmetic : + - * /
+        boolean: & |
+        comparison : < > |
+    
+
+Subroutine calls:
+    To call a function:
+        do className.functionName()
+
+    To call a constructor:
+        let b = className.constructor(...)
+
+    To call a method:
+        To call method q of class Bar on the b object:
+           do b.q()
+
+        To call method g of the current class on 'this':
+            do g()
+
+Strings:
+    Lets start with an example. 
+    Example:
+    ...
+    var String s; //Creates a String pointer,initialized to null
+    var char c;
+    
+    //Suppose that we want s to be "Hello World". There are 2 ways to do this
+    
+    //Way 1:
+    let s = String.new(12); //Create a 12 char String object
+    //Followed by some loop that uses String's appendChar method to set s to "Hello World"
+
+    //Way 2:
+    let s = "Hello World"
+
+    //Accesing a character within a string:
+    let c = s.charAt(6);  
+
+
+    The compiler allows us to declare strings using Way 2
+    But under the hood,the vm code generated from Way 2 is actually the same as the vm code 
+    generated by Way 1. This is handled by the compiler
+    
+    This way of compilers hiding the complexity from the user is also called syntactic sugar
+
+
+Arrays:
+    Lets also start this with an example.
+    Example:
+    ...
+    var Array arr;
+    var String helloWorld;
+    let helloWorld = "Hello World!"
+    ...
+    let arr = Array.new(4)
+    let arr[0] = 12;
+    let arr[1] = false;
+    let arr[2] = Fraction.new(314/100);
+    let arr[3] = helloWorld;
+    ...
+    
+    This example is just used to demonstrate that Arrays in Jack are not typed
+    Jack Arrays are uni-dimensional, building multi-dimensional arrays are also possible.
+
+    Example of multi-dimensional array:
+    Let's say you want to build the array [[1,2,3],[4,5,6],[7,8,9]]
+    ...
+    var Array arr1;
+    var Array arr2;
+    var Array arr3;
+    var Array multiDArr;
+
+    let arr1 = Array.new(3);
+    let arr2 = Array.new(3);
+    let arr3 = Array.new(3);
+    let multiDArr = Array.new(3);
+
+    let arr1[0] = 1;
+    let arr1[1] = 2;
+    let arr1[2] = 3;
+
+    let arr2[0] = 4;
+    let arr2[1] = 5;
+    let arr2[2] = 6;
+
+    let arr3[0] = 7;
+    let arr3[1] = 8;
+    let arr3[2] = 9;
+
+    let multiDArr[0] = arr1;
+    let multiDArr[1] = arr2;
+    let multiDArr[2] = arr3;
+    ...
+
+    Visual representation:
+                        -------
+                        |...  |
+        LCL ->          |5000 | (arr1)
+                        |6000 | (arr2)
+                        |7000 | (arr3)                    
+                        |4000 | (multiDArr)                    
+                        |...  |
+        addr 4000 ->    |5000 |
+        addr 4001 ->    |6000 |
+        addr 4002 ->    |7000 |
+                        |...  |
+        addr 5000 ->    |  1  |
+        addr 5001 ->    |  2  |
+        addr 5002 ->    |  3  |
+                        |...  |
+        addr 6000 ->    |  4  |
+        addr 6001 ->    |  5  |
+        addr 6002 ->    |  6  |
+                        |...  |
+        addr 7000 ->    |  7  |
+        addr 7001 ->    |  8  |
+        addr 7002 ->    |  9  |
+                        ------- 
+
+Extra notes:
+    There are some peculiar features to be aware of while developing Jack programs
+    -'let' must be used in assigments
+    -'do' must be used for calling a method or function
+    (this is done so that the writing of the compiler is easier)
+
+    -There is no operator priority in Jack:
+        2 + 3 * 4 in Jack is equals to 14
+        To enforce operator priority,use paranthesis 2 + (3 * 4)
 
