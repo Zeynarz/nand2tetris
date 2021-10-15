@@ -1,0 +1,140 @@
+Useful things to know while developing Jack programs
+-----------------------------------------------------
+While developing, should put all the .jack files in one directory and use the 
+JackCompiler.sh to compile them
+
+The Screen can contain 23 rows of 64 character / 256 rows of 512 pixels (black and white)
+
+The API of the OS classes (Screen,Keyboard,Output ...) is in the nand2tetris software suite
+Specifically at nand2tetris/projects/09/Jack\ OS\ API.pdf
+
+IMPORTANT: Remember to dispose objects after not needing them
+
+
+Graphics Optimization
+------------------------
+What if you not only want to use squares and circles for your Jack program but more complex drawings,like
+a spaceship in space invaders etc.
+
+These drawings are also called sprites
+Sprite : A two-dimensional bitmap
+
+How can you draw these sprites on the screen using Jack, and how can you do it efficiently?
+
+Remember that the Hack computer communicates with the Screen using memory mapped I/O
+(Starting at address 16384, A row has 32 registers)
+
+In the OS Memory Class, there are two functions called peek and poke
+function int peek(int address)
+function void poke(int address,int value)
+
+peek is to directly read from memory, and poke is to directly write to memory
+
+So if
+addr 19003: 0000000000000111
+
+let x = Memory.peek(19003);
+// x will be set to 7
+
+do Memory.poke(19003,-1);
+//addr 19003 : 1111111111111111
+
+
+In the OS Screen Class,there is a function called drawPixel
+
+function void drawPixel(int x,int y);
+ 
+If you say drawPixel(0,0);
+A pixel will be drawn at the top left corner.
+
+If you say drawPixel(511,255);
+A pixel will be drawn at the top right corner.
+
+
+Well lets say you want to draw this: sprite.png  (16*16 pixels)
+Can you draw this using the functions mentioned above?
+
+Method 1,drawPixel():
+    Well if you were to draw this sprite by drawing every single pixel
+    The code would look like this:
+        //Draw sprite at the top left corner of screen
+        //Draw top row
+        Do Screen.drawPixel(6,1);
+        Do Screen.drawPixel(7,1);
+        ...
+        Do Screen.drawPixel(12,1);
+
+        ...
+        //Draw bottom row
+        Do Screen.drawPixel(3,16);
+        ...
+        Do Screen.drawPixel(15,16);
+        
+    If you were to use this method, you would have to call Screen.drawPixel() for each black pixel.
+    There are a total of 75 black pixels on this sprite, so you would have to call the function 
+    Screen.drawPixel() 75 times.
+
+    The drawPixel function is actually compiled and translated into 40 assembly instructions.  
+    (a drawPixel function call = 40 assembly instructions)
+
+    So drawing this sprite would require a total of 3000 assembly instructions!
+    (75 * 40 = 3000)
+
+    This method is totally inefficient
+
+Method 2,poke():
+    The first row of the sprite, is actually just 0000111111100000. 
+    First row : 0000111111100000 : 4064
+    Second row: 0001100000110000 : 6192
+    Third row : 0001001010010000 : 4752
+    ...
+   
+    So if we were to write these numbers into memory, we could also render this sprite
+
+    The code would look like this:
+        //Draw sprite at the top left corner of the screen
+        do Memory.poke(16384,4064);
+        do Memory.poke(16384 + 32,6192);
+        do Memory.poke(16384 + 64,4752);
+        ...
+        do Memory.poke(16384 + 480,32508);
+
+    With this, we only have to write to 16 different registers.
+
+    Memory.poke is also highly optimized,Memory.poke in assembly is just:
+    @value
+    D=A
+    @addr
+    M=D
+
+    So Memory.poke() can be implemented with just 4 assembly instructions.
+    So drawing this sprite using this method would require just 64 assembly instructions! 
+    (4 * 16 = 64)
+
+    This is much more efficient than the first method.
+
+
+So we have agreed that Method 2 is a much better way of drawing the sprite since it is so efficient.
+There are still a couple of things I have to say for Method 2.
+
+Remember that the base address of the Screen memory map is 16384, so 16384 should be added to the address
+before Memory.poke(address,...)
+
+Each row is 32 registers, so to go to the next row but stay in the same column,simply add 32 to addr
+(Also remember that the sprite is 16*16 pixels)
+
+So if you have a function drawSprite(int x,int y);
+
+To draw on row 1,column 16, drawSprite(1,16),addr should be  = 16384 + 1*32 + 16/16   
+To draw on row 2,column 32, drawSprite(2,32),addr should be  = 16384 + 2*32 + 32/16   
+
+So addr = 16384 + x*32 + y/16
+then do Memory.poke(addr,...)
+     do Memory.poke(addr + 32,...)
+     ...
+
+
+There is also a bitmap editor developed by Golan Parashi that is available in the nand2tetris software
+suite. (nand2tetris/projects/09/)
+
+The bitmap editor makes rendering sprites much more easier

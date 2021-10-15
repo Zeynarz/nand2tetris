@@ -1,0 +1,19 @@
+Goal: Develop an application of choice using the Jack programming language
+
+(d) means Done
+
+Own thoughts
+--------------
+Initially I wanted to develop a pong game because the first programming video that I remembered
+following was a video about coding a Pong game in JS . I was 10 when I followed it and I don't think that 
+I understood a thing from the video. I was exactly copying what the guy was typing (I copied it in
+notepad) and when I opened the .html file to see the Pong game running, I was filled with joy.
+Although I copied everything, it still felt awesome because I saw and witnessed the power of programming
+
+The JS Pong game video : https://www.youtube.com/watch?v=KoWqdEACyLI
+
+But it seems like nand2tetris already showed a lot of examples of Pong games programmed using Jack.
+So instead I will make a platformer game because the same guy that made the JS Pong game video also
+made a video on coding a platformer.
+
+The Platformer video : https://www.youtube.com/watch?v=FGxdoHezkks

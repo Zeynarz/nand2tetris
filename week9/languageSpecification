@@ -383,3 +383,5 @@ Extra notes:
         2 + 3 * 4 in Jack is equals to 14
         To enforce operator priority,use paranthesis 2 + (3 * 4)
 
+    There is no "==" in Jack too. In an if statement etc, to check if x == y, you have to write it as
+    if x = y;
