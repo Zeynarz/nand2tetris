@@ -1,0 +1,270 @@
+Compilers
+----------
+Big picture:
+Jack -> Compiler -> vmcode -> VM Translator -> Assembly
+
+Now that we have developed the VM Translator and we have developed a program using Jack.
+It is time to write the compiler.
+
+The Jack compiler contains two seperate stages.
+-Syntax Analysis
+-Code generation
+
+Syntax analysis also contains two parts:
+-lexical analysis / tokenizer
+-parsing
+
+Jack -> tokenizer -> parsing -> code generator -> vm code
+
+In this module,Module 4,we are going to develop the syntax analyzer first.
+The syntax analyzer doesnt produce any code, so how are we going to test it it works?
+
+For this module, the syntax analyzer will output an output file written in XML.
+So we can check the xml file to see if the syntax analyzer is implemented/programmed properly
+
+EXTRA: Remember what nand2tetris is all about,it is about learning in depth what is working under the 
+       hood and about building a modern computer from first principles. It is about digging deeper.
+
+
+Lexical Analysis/Tokenizer
+----------------------------
+Let's start with an example:
+
+Prog.jack:
+...
+if (x < 0){
+    // prints the string
+    let sign = "negative";
+}
+...
+
+Prog.jack -> tokenizing -> tokenized input
+
+tokenized input:
+...
+if 
+(
+x
+<
+0
+)
+{
+let
+sign
+=
+"negative"
+;
+}
+...
+
+Note that to the compiler,Prog.jack is just a bunch of characters,but after tokenizing it,
+the tokenized input is a stream of meaningful tokens,tokens that makes sense to the Jack compiler.
+
+A token is a string of characters that has a meaning, a string of characters that makes sense
+within the language.
+
+For example the token "let" makes a lot of sense in/to the Jack compiler , the token "if" also makes 
+sense to the Jack compiler.
+
+So what kinds of tokens are there in Jack? 
+There are 5 kinds of tokens:
+keyword: "constructor","function","do","let","if" ...
+symbol: "{" , "}" , "|" , "+" , "-" ...
+integerConstant: a decimal number in the range of 0 to 32767
+stringConstant: a sequence of characters in double quotes
+identifier: names that are given by the programmer, like "gcd", "draw", "erase" ... 
+
+
+(After you have the tokenized input, you dont need the original .Jack file anymore.)
+
+(I am going to try to code the compiler in a more object oriented way)
+The Tokenizer should be a class and can:
+-Handle the compiler's input (tokenize the input)
+-Allow advancing to the next token
+-Supply the current token's value and type
+
+Let's say that you have succesfully created the Tokenizer class.
+You should be able to utilize the Tokenizer and output this (if Prog.jack was the input):
+...
+<keyword> if </keyword>
+<symbol> ( </symbol>
+...
+
+The code to utilize the Tokenizer class should be smthg like this:
+
+tknzr = Tokenizer()
+tknzr.advance() //On the first token
+
+while tknzr.hasMoreTokens():
+    tokenType = tknzr.currentType()
+    print("<{0}> {1} </{0}>\n".format(tokenType,tknzr.currentVal()))
+    tknzr.advance()
+
+
+What methods the tokenizer class should have will be mentioned later
+
+
+Grammar
+--------
+Having a valid set of tokens does not necessary mean that the program is valid.
+
+For example in the English language,if you have the set of tokens:
+Red drives car a he
+
+Although all the tokens are valid, the sentence makes absolutely no sense.
+However if the order of the tokens were, he drives a red car, the sentence makes sense,it means smthg
+
+Having a valid set of tokens is important, but the order of the tokens are also incredibly important
+
+The set of rules to describe how tokens can be combined, is called the grammar.
+
+For example, the grammar of the English language:
+    (| = or, ? = optional, * = one or more) 
+
+    sentence: nounPhrase verbPhrase
+    (a sentence is a nounPhrase followed by a verbPhrase)        
+
+    nounPhrase: determiner? noun
+    (a nounPhrase is an optional determiner and a mandatory noun)
+
+    verbPhrase: verb nounPhrase
+
+    noun: "dog" | "school" | "dina" | "he" | "she" | "homework" | "cat" | ...
+    (a noun can be "dog" or "school" or "dina" or ...)
+
+    verb: "went" | "ate" | "said" | ..
+    determiner: "the" | "to" | "my" | ...
+
+Now you can check, is "Dina went to school" a sentence?
+Well 'sentence: nounPhrase verbPhrase', 'Dina' is a noun, and a nounPhrase. (since determiner?)
+'went' is a verb and 'to school' is a nounPhrase, so 'went to school' is a verbPhrase.
+
+So according to the grammar of the English language, "Dina went to school" is a valid sentence.
+
+
+Now lets look at the grammar of the Jack language (a subset of the grammar,not all of the grammar):
+    statement: ifStatement | whileStatement | letStatement
+    statements: statement*
+    (statements is one or more statement)
+
+    ifStatement: 'if' '(' expression ')' '{' statements '}'
+    whileStatement: 'while' '(' expression ')' '{' statements '}'
+    letStatement: 'let' varName '=' expression ';'
+    
+    expression: term (operation term)?
+    term: varName | constant
+
+    varName: a string not beginning with a digit
+    constant: a decimal number
+    
+    operation: '+' | '-' | '=' | '>' | '<'
+
+Now according to the grammar of the Jack language, we can see if a combination of tokens is a statement?
+
+Example 1:
+    Is "let x = 100;" a valid statement?
+    
+    The first token is "let", so this should be a letStatement.
+    letStatement: 'let' varName '=' expression
+
+    'x' qualifies as a varName since it is a string not beginning with a digit
+
+    According to the grammar, there should be a 'let' followed by varName followed by '=', and 
+    'let x = 100' follows this pattern.
+
+    There should also be an expression after '=', and expression: term (operation term)?
+    100 is a constant, and a constant is a term, and a term is also an expression.
+    So 100 is an expression
+    
+    The grammar also says that the expression should be followed by a ';'.
+
+    'let x = 100' follows all these rules, so 'let x = 100' is a valid statement
+
+Example 2:
+    Is 'let x = x + 1;' a valid statement?
+
+    Well 'let x =' is the same as the previous example so we already know its valid.
+    (Im not gonna discuss it again since it will waste time and space)
+
+    According to the grammar,the '=' should be an followed by an expression.
+    expression: term (operation term)?
+
+    Well 'x' is a varName, so its also a term 
+    '+' is an operation , '1' is a constant, so its also a term
+
+    So 'x + 1' is an expression.
+
+    The expression should also be followed by a ';', and 'let x = x + 1;' follows this rule.
+    Since 'let x = x + 1' follows the grammar, it is a valid statement.
+
+Example 3:
+    while (n < lim) 
+        let n = n + 1;
+    }
+
+    So the first token is 'while' so it is obviously a whileStatement.
+    
+    'while' should be followed by '(' and then followed by an expression  and ')'
+    'n < lim' is an expression, so currently, everything seems alright
+    
+    The ')' should be then followed by a '{', but this combination of tokens did not follow this rule,
+    so it is not a valid statement, and the compiler will throw a syntax error.
+
+So this is practically what the Parsing step in the compiler is all about
+
+Parsing:
+-Determining if a given input follows the grammar
+-Uncover the grammatical structure of the given input. (Gramatical structure is explained later on)
+
+
+Notice how unlike the VM Translator and the Assembler, the Compiler doesnt assume that the given 
+Jack file is syntactically valid, and this actually makes a lot of sense.
+
+If you assume that nobody is going to write programs in assembly and in vm language, and assume that
+only the Jack language is used to write applications, only the compiler has to do the syntax/grammar
+checking, because only humans will make syntax errors, whereas programs wont.
+
+If the compiler is implemented/programmed well, the output of the compiler, which is vm code, should
+have no syntax errors, thus the VM Translator doesnt have to check for syntax errors.
+
+If the VM translator is implemented/programmed well, the output of the translator, which is assembly,
+should have no syntax errors, thus the Assembler doesnt have to check for syntax errors.
+
+
+Parse Trees
+------------
+(Trees in this case is refering to the data structure)
+The Parse tree data structure is used to describe/express the gramatical structure
+
+For example, the gramatical structure / parse tree of an English sentence:
+englishTree.png
+
+The leaves of this tree is "the" , "dog" , "ate" ...
+
+Now lets look at the gramatical structure / parse tree of a Jack statement:
+jackTree.png
+
+The leaves of this tree are actually the tokens. ("while","(","count" ... ) 
+
+Now let us focus at a subset of the Jack statement subtree:
+smallTree.png
+
+This is the parse tree of "count + 1"
+
+So currently the only parse trees that we saw are in the form of a diagram, is there any way to
+describe a parse tree in text?
+
+Well the parse tree of "count + 1", can be written in the form of XML:
+    <expression>
+        <term>
+            <identifier> count </identifier>
+        </term>
+
+        <symbol> + </symbol>
+
+        <term>
+            <integerConstant> 1 </integerConstant>
+        </term>
+    </expression>
+
+(The process of actually constructing the parse tree in XML will be discussed later)
