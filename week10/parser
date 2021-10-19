@@ -1,0 +1,196 @@
+Parser Logic
+--------------
+So how can we construct the parse tree in XML?
+
+Well there should be a class named CompilationEngine. (This is actually the parser)
+This class should have a set of methods, one method for every non-terminal rule in the grammar.
+(Non terminal rule meaning rules like expression,term,ifStatement)
+(terminal rules are like varName,constant,operation,these will be crystal clear after the pseudocode)
+
+So the CompilationEngine should look something like this:
+(pseudo code)
+
+class CompilationEngine():
+    compileStatements():
+        ...
+
+    compileIfStatements():
+        ...
+
+    compileWhileStatements():
+        ...
+
+    compileTerm():
+        ...
+
+    ...
+
+All of the methods will follow the grammar and parse the input accordingly
+
+For example compileWhileStatements,
+It will first check if there is a 'while', and if there is, it will write it to the xml file
+Then it will check if there is a '(', and write it to the xml file
+
+But then , once the method wants to check for a non-terminal rule, like expression. It will call 
+the corresponding method.
+
+So in this case, compileWhileStatements will call compileExpression.
+
+
+Remember that at this point, at the "Parsing" step,the input is already tokenized, and a Tokenizer
+object is already created, so stuff like TokenizerObj.advance() ... is alr available
+
+Now, lets see what happens, when a tokenized "while (count < 100) { let count = count + 1}" is  sent
+to the parser.
+
+(Current token is "while)
+So compileWhileStatement is called (because the token is while):
+(compileWS = compileWhileStatement)
+
+    compileWs first checks if the current token is "while", the current token is "while" so  
+    compileWs writes to the xml file "<keyword> while </keyword>". tknzr.advance() is then called to 
+    select the next token.
+
+    compileWs then checks if the current token is "(", it is compileWs writes to the xml file
+    and tknzr.advance() is called.
+
+    Now compileWs checks to see if there is an expression, so
+    compileExpression is called:
+        
+        compileExpression wants to check if the current token is a term, so compileTerm is called:
+
+            compileTerm checks if the current token is a varName or constant,the currentToken is 
+            indeed a varName, so compileTerm writes to the xml file, and tknzr.advance() is called
+
+        compileExpression wants to check if the current token is an operation, it is indeed an 
+        operation, so compileExpression writes to the xml file and tknzr.advance() is called
+
+        compileExpression wants to check if the current token is a term, so compileTerm is called:
+
+            compileTerm checks if the current token is a varName or constant,the currentToken is 
+            indeed a constant, so compileTerm writes to the xml file, and tknzr.advance() is called
+
+    Now compileWS checks if the current token is ")" , it is indeed a ")", so compileWS writes to
+    the xml file and tknzr.advance() is called
+
+    Now compileWS expects to see statements, so
+    compileStatements is called:
+        The current token is "let", so we know that we have a letStatement. 
+        compileLetStatement is called:
+
+            compileLetStatement checks if the current token is "let", it indeed is so 
+            compileLetStatement writes to the xml file and tknzr.advance() is called
+
+            compileLetStatement checks if the current token is a varName, it indeed is a varName so
+            compileLetStatement writes to the xml file and tknzr.advance() is called
+            
+            compileLetStatement checks if the current token is "=", it indeed is so 
+            compileLetStatement writes to the xml file and tknzr.advance() is called
+
+            compileLetStatement then expects to see an expression, so compileExpression is called:
+            
+                (This is exactly the same as above at line 60)
+
+            Now compileLetStatement checks if the current token is ";", it indeed is so 
+            compileLetStatement writes to the xml file and tknzr.advance() is called
+
+    Now compileWS checks if the current token is "}" , it is indeed a "}", so compileWS writes to
+    the xml file and tknzr.advance() is called
+    
+    And now, the tokenized "while (count < 100) { let count = count + 1}" is completely parsed.
+
+
+The output should look something like this: output.png
+
+
+So now lets take an even closer look at the compileWhileStatement.
+Pseudocode:
+
+compileWhileStatement() {
+    eat('while');
+    eat('(');
+    compileExpression();
+    eat(')');
+    eat('{');
+    ...
+}
+
+What is this "eat" function?
+It is basically just a helper function that checks if the current token is the argument.
+So if eat("while") is called, the function will check if the current token is "while"
+
+Pseudo code:
+
+eat(string){
+    if (currentToken != string)
+        error ...
+    else
+        tknzr.advance() ...
+}
+
+More about grammars and parsing
+---------------------------------------------
+LL grammar: a grammar that can be parsed by a recursive descent parser without backtracking.
+
+Once you are at lets say token 50, you dont need to go back to previous tokens to figure out
+what rule in the grammar to follow.
+
+LL(k) parser: a parser that needs to look ahead AT MOST k tokens in order to determine which rule 
+              is applicable
+
+The grammar of the Jack language that we have seen so far is LL(1)
+
+This means that once I have a particular token, I immediately know what rule I have ot follow
+For example if the current token is "let", I immediately know that I have to follow the letStatement
+rules, if the current token is "if", I immediately know that I have to follow the ifStatement rules.
+
+
+The grammar of English is like LL(7).
+
+For example if your current token is "lift",you still dont know what to do with this token.
+The next token may possibly be "me", so "lift me"
+It may also be possible be "operator", so "lift operator"
+
+
+The Full Jack Grammar
+----------------------
+So up until now, we only saw a small part of the Jack Grammar, and not the full Jack Grammar.
+
+Grammar notation reminder:
+x y : indicates that x appears, and then y appears
+x?  : indicates that x appears 0 or 1 times
+x*  : indicates that x appears 0 or more times
+
+
+The full grammar of the Jack language: fullGrammar1.png fullGrammar2.png
+
+So we will write our parser based on this Jack Grammar. the parser should have a method for almost
+every non-terminal rule that is in the grammar
+
+Each method will write to the XML file
+
+
+There is something special the handling of the term rule
+
+term: integerConstant | stringConstant | keywordConstant | varName | varName '[' expression ']'|
+      subroutineCall | '(' expression ')' | unaryOp term
+
+When the current token is a varName (some identifier), it can be the first token in any one of these
+possibilities:
+
+foo
+foo[expression]
+foo.bar(expressionList)
+Foo.bar(expressionList)
+bar(expressionList)
+
+To know which possibility we are dealing with, the parser should "look ahead" can get the next token
+
+If the next token is '[', then you should be following the rule 
+varName '[' expression ']'
+
+If the next token is '.', then you should be following the rule
+varName '.' subroutineName '(' expressionList ')'
+
+
+This is the only case in the Jack Language where the language becomes LL(2)

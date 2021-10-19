@@ -239,12 +239,12 @@ The Parse tree data structure is used to describe/express the gramatical structu
 For example, the gramatical structure / parse tree of an English sentence:
 englishTree.png
 
-The leaves of this tree is "the" , "dog" , "ate" ...
+The leaves/terminal nodes of this tree is "the" , "dog" , "ate" ...
 
 Now lets look at the gramatical structure / parse tree of a Jack statement:
 jackTree.png
 
-The leaves of this tree are actually the tokens. ("while","(","count" ... ) 
+The leaves/terminal nodes of this tree are actually the tokens. ("while","(","count" ... ) 
 
 Now let us focus at a subset of the Jack statement subtree:
 smallTree.png
