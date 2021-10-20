@@ -1,0 +1,193 @@
+Expected output of the syntax analyzer
+----------------------------------------
+Previously we stated that to individually test the syntax analyzer, we are going to have it output
+an XML file.
+
+When the parser encounters a token/input that correspond to terminal rules like keyword,symbol
+integer constant,string constant or identifier
+
+the parser should generate the output
+
+<terminalElement>
+    ...
+</terminalElement>
+
+Examples:
+<keyword> method </keyword>
+<symbol> { </symbol>
+<integerConstant> 42 </integerConstant>
+
+
+There are two types of non-terminal rules,
+
+When the parser encounters the first type of the non-terminal rules like class declaration, class
+variable declaration,subroutine declaration,parameter list, let statement, if statement, while
+statement .....
+
+the parser should generate the output
+
+<nonTerminal>
+    Recursive output for the non-terminal body
+</nonTerminal>
+
+Example: if the input is 'return x;' :
+<returnStatement>
+    <keyword>
+        return
+    </keyword>
+    <expression>
+        <term>
+            <identifier> x </identifier>
+        </term>
+    </expression>
+    <symbol> ; </symbol>
+</returnStatement>
+
+When the parser encounters the second type of non-terminal rules (shallow rules), like type,class name,
+subrountine name,variable name, statement, or subroutine call.
+
+The parser handles these rules without marking it up
+
+Example:
+letStatement: 'let' varName '=' expression ';'
+varName: identifier
+identifier: a sequence of letters,digits, ... not starting with a digit
+
+handling 'let x = 17'
+
+<letStatement>
+    <keyword> let </keyword>
+    <identifier> x </identifer>
+    <symbol> = </symbol>
+    <expression>
+    ...
+
+Notice that at line 60, I wrote <identifier> x </identifier> instead of 
+<varName>
+    <identifier> x </identifer>
+</varName>
+
+This is what is meant by "The parser handles these rules without marking it up"
+
+
+The Jack Analyzer: Proposed Implementation
+-------------------------------------------
+So the Jack Analyzer is going consist of three classes:
+-JackTokenizer
+-CompilationEngine
+-JackAnalyzer (this is the 'main' of the program,dk if this should be class or just implement as 
+function)
+
+Usage: python3 JackAnalyzer input
+
+The input could be a single fileName.jack file, or a directory containing zero or more .jack source 
+files
+
+If the input is a single file, the output would be fileName.xml,
+if the input is a directory, the output is one .xml file for every .jack file, stored in the same 
+directory
+
+The JackAnalyzer is written according to the Jack grammar.
+
+Tokenizer 
+-----------
+The Jack Tokenizer allows:
+-ignoring white space
+-advancing the input, one token at a time
+-get the value and type of the current token
+
+pseudocode:
+
+class JackTokenizer():
+    //constructor // __init__ in python
+    hasMoreTokens()
+    advance()
+    tokenType()
+    ...
+
+Let's talk a little bit about the advance method
+When advance is called,it should look at characters one after another,and decide if it is a token.
+If it decides that it has read a token, then it stops reading, and the token read is selected.
+
+If you have a bunch of characters that has no space in the middle, it doesnt neccessary mean you 
+have a token.
+
+For example:
+class Point {
+    ...
+    method int getx() {
+        return x;
+    }
+    ...
+}
+
+Take a look at 'getx()',although there are no spaces, there are actually 3 tokens in 'getx()'
+
+How can the Tokenizer know 'getx()' is actually 3 different tokens ? Well we can just refer to the
+grammar.
+
+Let's say that advance() is called, and the currentChar = 'g'. token = "g"
+Then I read the next char, and currentChar = 'e'. I append it, so token = "ge"
+Then I read the next char, and currentChar = 't'. I append it, so token = "get"
+Then I read the next char, and currentChar = 'x'. I append it, so token = "getx"
+Then I read the next char, and currentChar = '('. '(' is not a legitimate part of an identifier, so
+now I know that currentChar is a new token/part of a new token, so I stop reading the next char.
+
+I take my token, token = "getx", and check if it is a keyword, it's not a keyword, so it must be 
+and identifier. So now I know the currentToken = "getx", type = "identifier"
+
+the API/documentation of the Tokenizer: api/tokenizer1.png api/tokenizer2.png
+Idk if I will follow the last 5 methods of the api, I might just write a method that returns
+the value of the current token, smthg like currentVal()
+
+Extra comments on Tokenizer:
+I have thought about writing a initialize() method that just reads all the tokens, and stores 
+them in a list, like ["if","(",...] .But this is not a good way of doing things, 
+advance() is so much more better.
+
+If you have 100 tokens, your list would have to be 100 elements long, that takes up a lot of
+memory/RAM. If you are trying to compile a long Jack program that may have up to 3000 tokens,
+a lot of memory is going to be used
+
+But with advance, you only need a couple of variables,no lists,so the memory used is very very little.
+So advance() is much much cheaper than initialze() in terms of memory.
+
+CompilationEngine
+------------------
+Most stuff is already described in Unit 4.5, in the 'parser' notes
+
+the API/Documentation of the CompilationEngine: api/compilationEngine1.png api/compilationEngine2.png
+
+(Remember that once a CompilationEngine object is created,it should call compileClass)
+
+The following non-terminal rules in the Jack Grammar have no corresponding compilexx methods:
+-type -className -subroutineName -variableName -statement -subroutineCall
+
+The parsing logic of these rules is handled by the rules that calls them.
+
+So I assume for "letStatement: 'let' variableName '=' expression", the code is smthg like:
+
+def compileLet:
+    eat("let")
+    if tknzr.tokenType != "identifier":
+        error ...
+
+    else:
+        advance ...
+
+    eat("=")
+    ...
+
+Another example is compileStatements,
+compileStatements:
+    -uses a loop to handle 0 or more statement instances. 
+    -If the left-most token is "if","while" ..., compileIf is called, compileWhile is called ...
+    -there is no compileStatement method
+
+JackAnalyzer
+-------------
+The JackAnalyzer does the file/directory handling.
+For each file,The JackAnalyzer will:
+    -Create a JackTokenizer from fileName.jack
+    -Create an output file named fileName.xml
+    -Create a CompilationEngine
