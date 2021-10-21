@@ -1,0 +1,32 @@
+Goal: Develop a syntax analyser for the Jack Language
+    ArrayTest: Main.xml MainT.xml(d)
+    ExpressionLessSquare: Main.xml MainT.xml(d) Square.xml SquareT.xml(d) SquareGame.xml 
+                          SquareGameT.xml(d)
+    Square: Main.xml MainT.xml(d) Square.xml SquareT.xml(d) SquareGame.xml SquareGameT.xml(d)
+
+(d) means done
+
+
+There is a tool named TextComparer in nand2tetris/tools used to compare text files
+String constants outputed in the xml file dont have double quotes
+
+So "Hello World" in the .xml file will be 
+<stringConstant> Hello World </stringConstant>
+
+<,>,", and & are outputted as &lt;  &gt;  &quot;  and &amp;
+< = &lt; > = &gt;
+" = &quot; & = &amp;
+
+
+Implementation tips
+--------------------
+-Build a basic CompilationEngine first that handles everything except expressions, then only
+ build the complete version of the CompilationEngine
+
+To test the first version of the CompilationEngine,test using the ExpressionLessSquare jack programs 
+which doesnt contain any expressions.
+
+Then to test the complete verysion of the CompilationEngine, use the Square jack programs.
+
+There is no compileSubroutineCall method, rather the subroutine call logic is handled in 
+compileTerm
