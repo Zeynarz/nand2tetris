@@ -1,8 +1,8 @@
 Goal: Develop a syntax analyser for the Jack Language
-    ArrayTest: Main.xml MainT.xml(d)
-    ExpressionLessSquare: Main.xml MainT.xml(d) Square.xml SquareT.xml(d) SquareGame.xml 
-                          SquareGameT.xml(d)
-    Square: Main.xml MainT.xml(d) Square.xml SquareT.xml(d) SquareGame.xml SquareGameT.xml(d)
+    ArrayTest: Main.xml(d) MainT.xml(d)
+    ExpressionLessSquare: Main.xml(d) MainT.xml(d) Square.xml(d) SquareT.xml(d) SquareGame.xml(d) 
+                       SquareGameT.xml(d)
+    Square: Main.xml(d) MainT.xml(d) Square.xml(d) SquareT.xml(d) SquareGame.xml(d) SquareGameT.xml(d)
 
 (d) means done
 
