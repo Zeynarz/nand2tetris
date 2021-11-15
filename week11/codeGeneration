@@ -1,0 +1,95 @@
+Remember that the compiler is split into the syntax analyzer and the code generator
+We developed the syntax analyzer in week10 and tested it by making it output xml code
+
+In this module/week11,the xml code is no longer relavant. We want to actually generate vm code
+based on the source code,we have to rewrite certain elements of the parser and have to write a new 
+codeGenerator object.
+
+
+Some notes/observations about compilation
+------------------------------------------
+(Compilation of a program that is made up of several classes is quite a complicated task, so it helps
+if we simplify the problem a little and break it up into smaller parts.)
+
+Each class file is compiled seperately.
+So:
+    class Main{
+        ...
+    }
+    
+and
+    
+    class Point{
+        ...
+    }
+
+is compiled seperately.
+
+So the overall task of compiling a multi-class program has been reduced to a simpler task of compiling
+one class at a time.
+
+Instead of thinking about the way to compile a whole program, you now only need to think about the 
+way to compile a whole class.
+
+
+So how CAN you compile a class?
+We first need to take a look at an example.
+
+Example:
+class Point { 
+    field int x, y;
+    static int pointCount;
+    
+    constructor Point new(int ax, int ay){}
+
+    method int getx() {}
+
+    method int gety() {}
+    
+    function int getPointCount() {}
+
+    method Point plus(Point other) {}
+
+    method int distance(Point other) {
+        var int dx, dy;
+        ...
+    }
+
+    method void print() {}
+}
+
+
+So as you can see, a class is made up of a 'class declaration', and a couple 'subroutines'
+
+So the two main modules of a class is :
+-class declaration
+-subroutines
+
+
+So now compilation can once again be viewed as two seperate processes at the class level.
+First you compile the class declaration, and then you compile each subroutine one at a time
+
+So now instead of thinking about the way to compile a whole class, you just have to think about
+the way to compile class declarations and subroutines
+
+
+So how CAN you compile a subroutine?
+There are 5 things you can see in a subroutine, and they are:
+-variables (variables can also be seen in class declarations)
+-expressions
+-flow of control
+-objects
+-arrays
+
+So if you can handle these 5 things, you can compile a subroutine (and also class declarations), and
+thus you can compile classes, and thus you can compile programs.
+
+
+
+Handling Variables
+---------------------
+
+
+
+
+
