@@ -87,9 +87,299 @@ thus you can compile classes, and thus you can compile programs.
 
 
 Handling Variables
----------------------
+---------------------------------------------
+Let's start with an example
+
+Example:
+
+source code: 
+...
+let sum = x * (1 + rate)
+...
+
+PSEUDO vm code:
+
+push x 
+push 1
+push rate
++
+*
+pop sum
+
+How did the compiler compile "let sum = ..." into the vm code? This will be discussed in the 
+handling expressions part
+
+
+For now, let's focus only on the variables.
+The variables of the source code are "sum","x" and "rate"
+
+Remember that there is no such thing as "push x" and "push rate" in the vm language,there are only
+things like "push local 2" , "push argument 3" etc etc
+
+So how can we convert "push x" to like "push argument 0",and convert "push rate" to like "push 
+static 0"
+
+Well in order to do this and generate actual VM code instead of pseudo vm code, we must know:
+-Whether each variable is a field,static,local, or argument
+-Whether each variable is the first,second,third ... variable of its kind
+
+
+If we have this information,then we can generate actual VM code that may look smthg like this:
+
+VM code (actual):
+push argument 2
+push constant 1
+push static 0
+add
+call Math.multiply 2
+pop local 3
+
+(the "argument 2", "static 0" etc is just randomly made up)
+
+==================================================================================================
+
+There are only 4 possible variables in Jack.
+Class-level variables:
+-field
+-static
+
+Subroutine-level variables:
+-argument
+-local
+
+We stated above that we needed information/properties about the variables in order to generate 
+actual VM code
+
+Variable properties include:
+-name (identifier)
+-type (int,char,boolean,class name)
+-kind (field,static,local,argument)
+-scope (class level, subroutine level)
+
+These variable properties are NEEDED for code generation
+
+So how can we actually save these variable properties and manage them efficiently?
+By using a symbol table
+
+==================================================================================================
+
+Example:
+class Point {
+    field int x,y;
+    static int pointCount;
+
+    ...
+
+    method int distance(Point other) {
+        var int dx,dy;
+        let dx = x - other.getx();
+        let dy = y - other.gety();
+        return Math.sqrt((dx*dx) + (dy*dy));
+
+    }
+
+}
+
+So in this piece of code, there are 3 class-level variables, "x" , "y" and "pointCount"
+So the symbol table, will look something like this
+
+-------------------------------
+| name      | type | kind | # |
+-------------------------------
+| x         | int  |field | 0 |
+| y         | int  |field | 1 |
+| pointCount| int  |static| 0 |
+-------------------------------
+
+This symbol table holds all the properties of all the class-level variables
+
+(There are two symbol tables, one for class-level variables and one for subroutine-level variables)
 
 
 
+Now let's look at the distance method, and try to create a symbol table for the method(subroutine).
+So there are 3 variables, "dx" , "dy" and "other", so the subroutine symbol table should have 3
+entries right?
 
+This would be the case if this was just a function,but this is a method we're talking about
+
+A method is always designed to operate on a particular object,and this object is always represented
+using the variable "this".
+
+So the first entry of the subroutine symbol table, is "this".
+(Before calling the distance method in VM code,besides pushing "other" you also have to push the 
+object you want the method to operate on aka "this", I think we mentioned this briefly in previous 
+notes)
+
+--------------------------------
+| name  | type   | kind    | # |
+-------------------------------
+| this  | Point  |argument | 0 |
+| other | Point  |argument | 1 |
+| dx    | int    |local    | 0 |
+| dy    | int    |local    | 0 |
+--------------------------------
+
+Whenever you create a symbol table for a method, the first entry must always be "this" with kind 
+"argument" and # "0"
+
+So with only two symbol tables, one for class-level variables and one for subroutine-level variables,
+you can manage an entire class' variables
+
+The class-level symbol table can be reset each time we start compiling a new class.
+The subroutine-level symbol table can be reset each time we start compiling a new subroutine.
+
+(Remember that the compiler is compiling from one file/class to another, from line 1 of a file to
+EOF and then start from line 1 of another file, converting Jack code to vm code. Remember that 
+the compiler doesnt need to care about the logic of the Jack code whatsoever)
+
+(I think the reason that there are two symbol tables instead of one is that its good to have one
+symbol table for one scope. Since different scopes/different symbol tables reset at different times,
+and it is mentioned before that class declaration compilation and subroutine declaration is a seperate
+process)
+
+==================================================================================================
+
+Now that we know about the symbol tables, we can talk a little about constructing it.
+In Jack, there are only 3 variable declarations.
+field/static/var type varName;
+
+When the compiler encounters any one of these variable declarations,the compiler will figure out
+all the properties of the declared variable and then the compiler will add the declared variable and 
+its properties to the class/subroutine symbol table. 
+
+(if we are defining a field or static variable, the compiler will add a new row to the end of the 
+class-level symbol table,if we are defining a local variable or an argument, the compiler will update
+the subroutine-level symbol table)
+
+
+We talked only about field,static and local variable declaration,but we havent mentioned arguments
+Arguments are defined in the parameter list in subroutine declarations like "method int distance(
+Point other)".
+
+So when the compiler goes through the parameter list, it will also add to the subroutine-level 
+symbol table
+
+
+==================================================================================================
+
+As we mentioned before,now that we have the properties of the variables, now that we have the two
+symbol tables, we can generate actual VM code by looking up/refering to the symbol tables.
+
+
+Example: let dx = x - other.getx();
+
+When we encounter a variable while compiling this example, like "dx", we first look up the variable
+in the subroutine-level symbol table, if not found , look up the variable in the class-level symbol
+table, if not found, this variable is undefined, so throw an error.
+
+
+So when we encounter "dx", we can look up the subroutine symbol table and know that "dx" is 
+actually "local 0"
+    
+So we also know "x" = "field 0" and "other" = "argument 1"
+
+
+Example : let y = y + dy;
+
+When the compiler is compiling this example, it will lookup the symbol tables when it encounters
+variables, and will be able to generate:
+
+push this 1 // y
+push local 1 // dy
+add
+pop this 1 // y
+
+When the compiler wants to generate "push y" it can look up what y is  and can generate "push this 1",
+So now by using the symbol tables, you can generate actual vm code
+
+
+(Again,how the compiler generated these push and pops will be discussed in "Handling expressions")
+
+
+==================================================================================================
+
+Now let's talk about handling variables in a more general sense, about handling variables in other
+high level languages, not just Jack
+
+Different programming languages might have different 
+-variable types
+-nested scoping
+
+The techniques showed above (the symbol tables etc), can be easily changed to handle other 
+programming languages
+
+
+For example in Java, there are 8 primitive variable data types (int,char,short,float ...), in Jack
+we only have 3 primitive variable data types.
+
+So in the symbol table, you can just include more data types, so you might have stuff like
+
+| pi  | float  | local | 0 |
+
+
+The nested scoping is a little bit more involved though.
+
+For example, Java features unlimited scoping.
+There is a new scope in every new pair of curly brackets, example:
+
+class foo {
+    (scope 1 (class scope))
+    
+    method bar() {
+        (scope 2 (subroutine scope))
+        ... {
+            
+            (scope 3)
+
+            ...{
+            
+                (scope 4)
+                x = ...;
+            }
+        }
+    }
+}
+
+In Jack, we only have two symbol tables because there are only two possible scopes, one symbol table
+for one scope.
+
+How can you have one symbol table for one scope in Java if there is unlimited scoping?
+Well you can use a linked list of symbol tables
+
+When you start compiling a class, you create a linked list and the first symbol table of the linked
+list is the class-level symbol table, so
+
+class symbolTable -> null
+
+When you start compiling a method, you create a method symbol table, and put it in the linked list
+
+method symbolTable -> class symbolTable -> null
+
+Whenever you encounter a new scope, you create a new symbol table and add it to the linked list,
+so if we are currently at scope 4 in the example above, the linked list would look like:
+
+scope4 symboltable -> scope3 symboltable -> method symboltable -> class symboltable -> null
+
+
+Let's say you encounter variable "x" in scope 4, you first look up the topmost symbolTable (scope4
+symbolTable) and see if "x" is an entry there, if you can't find "x", you move to the next symbol
+table in the list and look it up there, continue this process until you reach the final symbol
+table which is the class symbol table. If "x" is still not in the class symbol table, then you can
+conclude that this variable as undefined and throw an error.
+
+
+I'm guessing that when you leave a scope, you remove the symbol table of the scope from the linked
+list.
+
+So if you leave scope 4, Im guessing that the scope4 symbol table will be removed from the linked 
+list, and the linked list will look like :
+
+scope3 symboltable -> method symboltable -> class symboltable -> null
+
+
+
+What happens if there are like 200 different scope's symbol table in the linked list?
+Well this would take up a lot of space and time while compiling the program,but I think the actual 
+speed of the Java program still heavily depends on the Java code.
 

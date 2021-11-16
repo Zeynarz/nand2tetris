@@ -1,0 +1,305 @@
+Handling Expressions
+----------------------
+Let's take a look at a few examples of expressions
+
+Remember that the grammar of an expression is 
+expression: term (op term)*
+
+Examples:
+5
+x
+x + 5
+Math.abs(x + 5)
+arr[Math.abs(x + 5)]
+foo(arr[Math.abs(x + 5)])
+...
+
+There is an infinite number of expressions of infinite complexity.
+So how can we translate ANY expression, into vm code?
+
+Well first we have to learn a little more about expressions
+
+==================================================================================================
+
+Example:
+
+    *
+   / \ 
+  a   +
+     / \
+    b   c
+
+(This is the parse tree of " a * (b + c)")
+
+ a * (b + c)  #INFIX
+
+This notation is called infix, it is human oriented. When we humans want to say add b and c together,
+and then times a, we humans say " a * (b + c) ".
+
+We humans express "add b and c together, and then times a" by using " a * (b + c) ".
+
+
+There is also another notation called prefix
+
+ * a + b c  #PREFIX
+
+(This notation is also called functional notation)
+In this notation, we put the operators(*,+), before the operands (a,b,c)
+
+
+Finally, we also have something called postfix notation
+
+ a b c + *  #POSTFIX
+
+In this notation,we put the operands(*,+) AFTER the operators (a,b,c).
+I would like to point out that is notation looks very similar to our stack langauge/vm language
+
+If we follow the postfix notation and write the corresponding pseudo vmcode:
+
+push a 
+push b
+push c
+add
+mult
+
+This pseudo vmcode will actually compute "a * (b + c)"
+
+
+Jack expressions are infix. The vm language is postfix.
+
+So what we actually want to do is we want to translate our infix Jack expressions, into postfix.
+This way we can just follow the postfix notation and write the corresponding vmcode
+
+Now the questions is how can we translate from infix to postfix?
+
+==================================================================================================
+
+Let's take a look at another expression.
+
+Example:
+
+source code: x + g(2,y,-z) * 5
+
+parse tree:
+
+        +
+       / \
+      x   *
+         / \
+        g   5
+       /|\
+      2 y -
+          |
+          z
+
+(We can generate the parse tree by using the parser we built in project 10)
+
+So what we WANT is that the compiler generates pseudo vmcode like this after compiling the source code
+pseudo vmcode:
+
+push x
+push 2
+push y
+push z
+-
+call g
+push 5
+*
++
+
+(In this example, there is operator priority, so the multiplication is done before the addition)
+
+So how can you generate this pseudo vm code? Well we already know we have to translate from infix to
+postfix, but how do we do that?
+
+
+Well we can use an algorithm called depth-first tree traversal on the parse tree.
+(This algorithm is explained very briefly here and not not elaborated a lot, this is because we won't
+actually be using this algorithm in the Jack compiler and actually use another method. If you want to
+learn more tho,
+
+Algorithm explanation (By geeksforgeeks) : 
+https://www.geeksforgeeks.org/dfs-traversal-of-a-tree-using-recursion/)
+
+So you begin on the root of the tree, which is "+" in this case, and you go all the way down until
+you hit a terminal leaf. So you go all the way down and find "x", you output "push x", then you 
+backtrack to the root. 
+
+Once again you go all the way down,and you'd get to "2", so you "push 2", you backtrack to the closest 
+node which is "g" and you go all the way down and you "push y" and so on and so forth
+
+This algorithm is not used because the parse tree of a real Jack program will be gigantic.
+So it would take up quite some time for the compiler to generate the parse tree and operate the 
+algorithm on the parse tree.
+
+We will actually use another recursive way to compile expressions
+
+==================================================================================================
+
+With this method, we are actually going to generate the vm code on the fly without having to
+generate the parse tree first.
+
+The method is actually a highly recursive function.
+
+Example: x + g(2,y,-z) * 5
+
+codeWrite(exp):
+    
+    if exp is a number n:
+        output "push n" // In the actual code of codeWrite, we would output "push constant n" 
+
+    if exp is a variable var:
+        output "push var" // We would actually output "push memorySegment num" by looking up the 
+                             symbol table
+    
+    if exp is "exp1 op exp2":
+        codeWrite(exp1)
+        codeWrite(exp2)
+        output "op"
+
+    if exp is "op exp":
+        codeWrite(exp)
+        output "op"
+
+    if exp is "f(exp1,exp2,...)"
+        codeWrite(exp1)
+        codeWrite(exp2)
+
+So codeWrite receives an expression, and generates vmcode from it.
+If the expression is a number, it will simply output "push constant number"
+So if the expression is 5, it will output "push constant 5"
+
+If the exp is a variable, it will simply output "push memorySeg num"
+So if the expression is "x", it will output something like "push local 1" //local 1 is randomly made up
+
+If the exp is "exp1 op exp2", like "a + b". It will first generate code for "a", then generate code for
+"b", then output the operator
+So:
+push a
+push b
++
+
+This can also be used for examples like " a * b + c", where exp1 = a * b, and exp 2 = c. So it would
+first codeWrite(a * b), which means codeWrite(a) (output "push a"), codeWrite(b) (output "push b") and
+then output  "*"
+then codeWrite(c), which just outputs "push c"
+then output "+"
+
+So the final would look like:
+push a 
+push b
+*
+push c 
++
+
+which is exactly what we want
+
+If the expression is a unary operator followed another expression,for example "-x", codeWrite will
+codeWrite(x) which outputs "push x" then outputs "-", so:
+
+push x
+-
+
+which is what we want
+
+Finally if the expression is a function call, for example g(2,y,-z), we first codeWrite all the 
+arguments, so codeWrite(2),codeWrite(y) and codeWrite(-z). And then we output "call g"
+
+codeWrite(2) : push 2
+codeWrite(y) : push y
+codeWrite(-z): push z; -
+
+So the final would look smthg like this:
+
+push 2
+push y
+push z
+-
+call g
+
+which is what we want
+
+
+So if "x + g(2,y,-z) * 5" is put into codeWrite, it would output some like this:
+
+push x
+push 2
+push y
+push z
+-
+call g
+push 5
+* 
++
+
+==================================================================================================
+
+Now some important points about switching from parsing (which is what we did in the last module) to
+code generation (what we are doing in this module)
+
+Source code: let x = a + b - c;
+
+Previously our task was to parse this code and generate an output like:
+
+<letStatement>
+    <keyword> let </keyword>
+    <identifier> x </identifer>
+    ...
+
+Currently, our task is to translate this source code into vm code, and generate an output like:
+push a 
+push b
++
+push c
+- 
+pop x
+
+But don't think that what we did in the previous module was a waste, the compilationEngine that we made
+in the last module is applicable in this project. But instead of generating xml code, the compiler 
+should generate vmcode
+
+
+Let's look at another point.
+
+source code: let x  = a + b * c
+
+One compiler (compiler A) might generate vm code like this:
+
+push a 
+push b
++
+push c
+*
+pop x
+
+whereas another compiler (compiler B) might generate vmcode like this:
+
+push a
+push b
+push c
+*
++
+pop x
+
+Compiler A does not have operator priority whereas compiler B has operator priority.
+
+Which compiler is the acceptable compiler?
+Both compilers are both acceptable, the Jack language as mentioned before, does not have operator 
+priority. Compiler B just went the extra mile and implemented operator priority, which is great.
+
+(The Jack language has no operator priority to make the writing of the compiler easier.)
+
+The feature of operator priority completely depends on the compiler developer,if he/she wants to
+include operator priority, fine, if he/she does not want to include operator priority, fine too.
+
+Of course, if there are parantheses, for example:
+let x = a + (b * c)
+
+Both compilers should respect the parantheses and only output:
+
+push a
+push b
+push c
+*
++
+pop x
