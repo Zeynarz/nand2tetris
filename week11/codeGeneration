@@ -1,3 +1,9 @@
+NOTE:
+For this week's notes, Topics/Chapter name is in full caps and has a ---------- underneath
+Subtopics are not in full caps and have a ============ underneath
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
 Remember that the compiler is split into the syntax analyzer and the code generator
 We developed the syntax analyzer in week10 and tested it by making it output xml code
 
@@ -6,8 +12,8 @@ based on the source code,we have to rewrite certain elements of the parser and h
 codeGenerator object.
 
 
-Some notes/observations about compilation
-------------------------------------------
+SOME NOTES/OBSERVATIONS ABOUT COMPILATION
+-------------------------------------------
 (Compilation of a program that is made up of several classes is quite a complicated task, so it helps
 if we simplify the problem a little and break it up into smaller parts.)
 
@@ -86,8 +92,8 @@ thus you can compile classes, and thus you can compile programs.
 
 
 
-Handling Variables
----------------------------------------------
+HANDLING VARIABLES
+------------------------------
 Let's start with an example
 
 Example:
@@ -136,7 +142,6 @@ pop local 3
 
 (the "argument 2", "static 0" etc is just randomly made up)
 
-==================================================================================================
 
 There are only 4 possible variables in Jack.
 Class-level variables:
@@ -161,6 +166,8 @@ These variable properties are NEEDED for code generation
 So how can we actually save these variable properties and manage them efficiently?
 By using a symbol table
 
+
+Symbol tables
 ==================================================================================================
 
 Example:
@@ -238,6 +245,8 @@ symbol table for one scope. Since different scopes/different symbol tables reset
 and it is mentioned before that class declaration compilation and subroutine declaration is a seperate
 process)
 
+
+Construction of symbol tables
 ==================================================================================================
 
 Now that we know about the symbol tables, we can talk a little about constructing it.
@@ -261,6 +270,7 @@ So when the compiler goes through the parameter list, it will also add to the su
 symbol table
 
 
+Generating actual vm code using symbol tables WITH examples
 ==================================================================================================
 
 As we mentioned before,now that we have the properties of the variables, now that we have the two
@@ -297,6 +307,7 @@ So now by using the symbol tables, you can generate actual vm code
 (Again,how the compiler generated these push and pops will be discussed in "Handling expressions")
 
 
+Handling variables in other high level languages
 ==================================================================================================
 
 Now let's talk about handling variables in a more general sense, about handling variables in other

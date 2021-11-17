@@ -1,0 +1,85 @@
+HANDLING OBJECTS (LOW-LEVEL ASPECTS)
+--------------------------------------
+Remember that objects are just pointers. 
+
+Lets say that object Player = 8500, so the properties of Player are stored at RAM[8500]+
+             ------------------
+Player ->    |property1       |
+8501   ->    |property2       |
+8502   ->    |property3       |
+             |...             |
+             ------------------
+
+Methods are just functions that manipulate an object's properties, some methods changes an object's
+properties's values,some methods retrieve an object's properties values, and does something using
+those values.
+
+For example, lets say that property1 of Player holds the x position of Player, and property2 of Player 
+holds the y position of Player. There may be some method drawPlayer(), that retrieves property1 and 
+property2 of Player, and draws the Player on the screen at the x and y coordinates retrieved.
+
+There also may be a method called move(), that changes property1 and property2 based on userInput.
+
+
+At the low-level, how can you access properties of an object?
+
+
+Accessing properties of an object at the low-level (VM level and CPU/RAM level)
+=====================================================================================================
+First of all, remember that ALL objects are stored on the heap.
+
+If we want to manipulate objects, there are two pointers to help us.
+"THIS" and "THAT"
+
+("THAT" is actually used to manage arrays, will talk about "THAT" in later parts)
+
+The address that "THIS" is pointing to, is treated as the selected object.
+So if there is an object playerObj at address 9800, if "THIS" = 9800, it means that we are currently 
+selecting playerObj.
+
+If we want to change the first property of playerObj, we can simply "push this 0"
+
+Well what if we want to change where "THIS" is pointing to. Let's say that we want to select an 
+object at address 8300.
+
+We can "push constant 8300" and "pop pointer 0"
+poping pointer 0 will set "THIS" to the topmost value of the stack.
+poping pointer 1 will set "THAT" to the topmost value of the stack.
+
+(If I remember correctly,this feature is exclusive to only "THIS" and "THAT". For example, you can't 
+change where ARG is pointing to with a "pop", you also can't change where LCL is pointing to with a 
+"pop". ARG and LCL are only changed when a "call" or "return" is executed,you cannot manually change 
+where they are pointing at with a "pop")
+
+
+Now that we know all of this, lets try accesing an object's properties 
+
+Example:
+Let's say that there is an object at address 8000 and we want to retrieve the first property of the
+object.
+
+Well first, we have to "push 8000; pop pointer 0", now "THIS" is set to 8000,and the object at addr
+8000 is selected.
+
+Then,we can "push this 0", now the value in RAM[8000] will be the topmost value of the stack
+
+So all we have to do to access the first property of the object is:
+
+push 8000
+pop pointer 0
+push this 0
+
+If we want to access the n'th property of the object:
+
+push 8000
+pop pointer 0
+push this n
+
+
+This method that we just discussed, is actually a basic technique/generic way to access object data.
+
+
+HANDLING OBJECTS (CONSTRUCTION)
+---------------------------------
+
+
