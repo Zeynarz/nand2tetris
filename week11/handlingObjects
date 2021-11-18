@@ -1,6 +1,7 @@
 HANDLING OBJECTS (LOW-LEVEL ASPECTS)
 --------------------------------------
-Remember that objects are just pointers. 
+Remember that objects are actually just pointers, pointing to its properties.
+(like how an array is also just a pointer, pointing to its elements)
 
 Lets say that object Player = 8500, so the properties of Player are stored at RAM[8500]+
              ------------------
@@ -21,7 +22,8 @@ property2 of Player, and draws the Player on the screen at the x and y coordinat
 There also may be a method called move(), that changes property1 and property2 based on userInput.
 
 
-At the low-level, how can you access properties of an object?
+(Before we learn about translating/compiling constructors and methods and other things that deal 
+with objects we first kind of have to know how to access properties of an object at a low lovel)
 
 
 Accessing properties of an object at the low-level (VM level and CPU/RAM level)
@@ -81,5 +83,569 @@ This method that we just discussed, is actually a basic technique/generic way to
 
 HANDLING OBJECTS (CONSTRUCTION)
 ---------------------------------
+Whenever you want to create an object, you call the constructor of the object
+
+caller: 
+...
+var Point p1;
+let p1 = Point.new(2,3)
+...
+
+callee/constructor's code:
+class Point {
+    field int x,y;
+    static int pointCount;
+    ...
+
+    constructor Point new(int ax, int ay){
+        let x = ax;
+        let y = ay;
+        let pointCount = pointCount + 1;
+        return this;
+    }
+
+}
+
+We'll now discuss about compiling the caller's code that calls the constructor , and we'll also 
+discuss about compiling the constructor.
+
+Compiling the caller's code
+=====================================================================================================
+
+caller: 
+...
+var Point p1;
+let p1 = Point.new(2,3);
+...
+
+The end result of this code is that
+
+             ------------------
+ p1    ->    |6012            |  <-|
+             |...             |    |-- STACK
+             |...             |  <-|
+             |...             |
+6012   ->    |2               |  <-|
+6013   ->    |3               |    |-- HEAP
+             |...             |  <-|
+             ------------------
+
+Point.new() will create a new object at address 6012, (which is a completely random address) and
+store the object's properties there. Point.new() will return the address of the new object, which
+is 6012 and the caller will store the address in p1.
 
 
+Now let's look at how to actually compile the caller's code.
+When the compiler encounters "var Point p1;", the compiler actually does not generate any vmcode,it
+will just update the subroutine's symbol table.
+
+So whenever the compiler encounters a variable declaration, it will just update the relevant symbol 
+table, and does not generate any vm code
+
+Now let's start compiling "let p1 = Point.new(2,3);"
+Well Point.new(2,3) is just a subroutine call, and we already know how to handle subroutine calls. 
+We just have to push the arguments, and call Point.new:
+
+push 2
+push 3
+call Point.new
+
+Remember that Point.new() is still a constructor, so we can assume that the constructor will 
+arrange/allocate a memory block to store the new object, and return the base address to the caller.
+
+So after "call Point.new" , the topmost value on the stack should be the base address of the object.
+And since this is still a let statement, the return value of Point.new should be stored in p1.
+
+So we should add a :
+
+pop p1
+
+after "call Point.new"
+
+So now, p1 is pointing at the newly constructed object.
+
+The final pseudo vmcode:
+
+//var Point p1;
+//Compiler won't generate any new code, will just update the subroutine symbol table
+
+//let p1 = Point.new(2,3);
+push 2
+push 3
+call Point.new
+pop p1
+
+
+So now, lets take a look at compiling the constructor code.
+
+
+Compiling constructors
+=====================================================================================================
+A constructor typically does two things:
+-Allocate/Arrange some memory on the RAM for the new object
+-Set the properties of the new object to certain values (that are described in the constructor code)
+
+The constructor can set the properties of the new object by using the method we discussed above,
+using "THIS" and "pointer 0" to access object's properties.
+
+constructor code:
+
+class Point {
+    field int x,y;
+    static int pointCount;
+    ...
+
+    constructor Point new(int ax, int ay){
+        let x = ax;
+        let y = ay;
+        let pointCount = pointCount + 1;
+        return this;
+    }
+
+}
+
+Well let's start compiling.
+
+When the compiler encounters "class Point; field int x,y; static int pointCount;", which are class and 
+variable declarations, it updates the class-level symbol table and generates no code whatsover.
+
+Class-level symbol table:
+
+-------------------------------  
+| name      | type | kind | # |  
+------------------------------- 
+| x         | int  |field | 0 | 
+| y         | int  |field | 1 | 
+| pointCount| int  |static| 0 |
+-------------------------------
+
+Then the compiler will encounter "constructor Point new(int ax,ay)", the compiler will generate no
+code too, it will just update the subroutine's symbol table. 
+(I thought that this will generate code like "function ...", but the instructors said that this will 
+generate no code,so idk.)
+
+
+Subroutine symbol table:
+
+-------------------------- 
+| name | type | kind | # |  
+--------------------------
+| ax   | int  | arg  | 0 | 
+| ay   | int  | arg  | 1 | 
+--------------------------
+
+Well now, after the compiler encounters "constructor Point ...", the compiler knows it is generating
+code for a constructor, and it knows the constructor has to create some space on the RAM for the 
+newly constructed object.
+
+So how can the compiler know how much space is needed for the object?
+The compiler can look at the class-level symbol table, and realize that the objects of the Point
+class requires only 2 * 16 bits = 32bits. (Every type in hack is 16-bit/ a word)
+
+So how can you find 32bits of free memory on the RAM? Well we will have to use the OS library.
+The OS library contains a function called Memory.Alloc (which is basically just malloc), if you
+pass in an argument like 5 to Memory.Alloc and call it. 
+
+Memory.Alloc will find a memory block in the heap which is free, (not in use by other objects/arrays) 
+and is 5 words long, so (5*16=80 bits )
+
+(Implementation of Memory.Alloc will be discussed in week12)
+
+The vmcode to create space for object on RAM:
+
+push 2
+call Memory.alloc 1
+pop pointer 0 
+ 
+
+Memory.alloc will return the base address of the memory block/newly constructed object ,so we can pop
+this address into "THIS"
+                
+So now when we refer to "this 0", we will refer to the first property of the newly constructed 
+object,so we can now access the properties of the object.
+
+We know that it is very likely that a constructor will access the properties of the newly created 
+object, so we just as well set "THIS" first. Even if the constructor does not access the properties 
+of the new object,there is no harm in setting "THIS".
+
+
+After that, the compiler will encounter the "let x = ... let y = ...". The generated code will be:
+
+push argument 0
+pop this 0
+push argument 1
+pop this 1
+
+We know that it is "argument 0" by refering to the subroutine symbol table, we also know that 
+"this 0 = x, this 1 = y" by refering to the class-level symbol table.
+
+After that, the compiler will encounter "let pointCount = pointCount + 1".
+
+push static 0
+push 1
+add
+pop static 0
+
+Then finally,there is a "return this" statement. It is required to have a "return this" in a 
+constructor.
+
+push pointer 0 // push base address of the new object
+return
+
+And then we're done!
+
+Final code:
+
+//constructor Point new(int ax, int ay)
+
+//The compiler creates the subroutine's symbol table
+//The compiler figures out the size(n) of an object of the class, and calls Memory.alloc(n)
+//Memory.alloc will find a memory block of the required size and return its base address
+
+push 2
+call Memory.alloc 1
+pop pointer 0
+
+//let x = ax; let y = ay;
+push argument 0
+pop this 0
+push argument 1
+pop this 1
+
+//let pointCount = pointCount + 1;
+push static 0
+push 1
+add
+pop static 0
+
+//return this
+push pointer 0
+return
+
+So now, we know how to compile constructors, and caller's that calls the constructors!
+
+
+
+HANDLING OBJECTS (MANIPULATION)
+----------------------------------
+Now that we learned how to compile constructors and constructor calls, we should move on and learn
+about compiling methods and methodCalls.
+
+The things we are going to compile:
+
+caller/methodCalls:
+...
+var Point p1,p2,p3;
+var int x, d;
+...
+let p1 = Point.new(2,3);
+let p2 = Point.new(5,7)
+
+//We have already learned how to compile everything above here, we just need to learn above compiling
+the code below here.
+
+let x = p1.getx()
+let p3 = p1.plus(p2);
+let d = p1.distance(p2);
+...
+
+
+callee/methods:
+
+class Point {
+    field int x,y;
+    static int pointCount;
+
+    method int distance(Point other){
+        var int dx,dy;
+        let dx = x - other.getx();
+        let dy = y - other.gety()
+        return Math.sqrt((dx*dx) + (dy*dy)); 
+    }
+
+}
+
+
+So first,lets look at compiling the caller / method calls
+
+
+Compiling method Calls
+=====================================================================================================
+First off, let's make some comments/observations about method calls
+
+Some examples of method calls are:
+-p1.distance(p2)
+-p1.get(x)
+-obj.foo(x1,x2,...)
+
+All method calls follow the form of
+
+Object.Method(arguments)
+
+We already learned previously, that for method calls, you have to first push the object you want
+the method to operate on aka "this", before calling the method in vm language.
+
+In other words, you have to pass the object you want the method to operate on as the first argument 
+of the method
+
+So for the method call p1.distance(p2),you have to
+
+push p1
+push p2
+call distance
+
+The object you want the method to operate on, is always treated as the first,implicit 
+argument (in vm language).
+
+When compiling let's say " obj.foo(x1,x2,...)"
+
+Generated vm pseudo code:
+//obj.foo(x1,x2,...)
+//Push the object you want the method to operate on (implicit argument), then push the method 
+//arguments then call the method
+
+push obj
+push x1
+push x2
+push ...
+call foo
+
+(pushing the object means pushing the pointer, pointing at the object's properties)
+
+
+             ------------------
+ p1    ->    |6012            |  <-|
+             |...             |    |-- STACK
+             |...             |  <-|
+             |...             |
+6012   ->    |2               |  <-|
+6013   ->    |3               |    |-- HEAP
+             |...             |  <-|
+             ------------------
+
+So pushing object p1 in this case means pushing 6012.
+
+So now we know how to compile method calls.
+
+Own comments:
+    I was wondering how the compiler can differentiate method calls to function calls like 
+    Memory.Alloc(). Both calls have a dot in them. Well I have come to the conclusion that you can
+    differentiate them by looking up the two symbol tables. For example, lets look at the source
+    code at line 336. The subroutine symbol table of that function is going to contain p1,p2,p3,x
+    and d. So when the compiler encounters p1.distance(), it can check if p1 is in the symbol table,
+    since it is, it can conclude that p1.distance is a method call. When then compiler encounters
+    Memory.Alloc(), it can check if Memory is in the two symbol tables,since both of them don't
+    contain Memory as an entry, the compiler can conclude that it is just a simple function call.
+
+    Secondly, I was wondering how can the compiler know which class the method is from. 
+    For example, while compiling p1.distance(), how can the compiler know that distance()
+    is from the Point class? 
+
+    First of, why DOES the compiler need to know which class the method is from.
+    Well, if the compiler does not know, then the method calls in vm language would just be 
+    "call distance nArgs". If that is the case,then method declaration in vm would also have to
+    be "function distance nVars",instead of "function Point.distance nVars". If this was the case, 
+    then different classes can't have the same method name. Like if class1 has a method named getX(), 
+    then class2 can not have a method named getX(). Why can't class2 have a method named getX(), well 
+    if class2 has a method named getX(), then if class3 has a vm instruction that is "call getX nArgs",
+    how will the vm translator know if "call getX nArgs" is refering to class1.getX or class2.getX 
+
+    So how CAN the compiler know?
+    Well I have concluded that the compiler should just look up the symbol table.
+    When the compiler wants to compile "p1.distance", it can look up the symbol table, and see
+    that the type of p1 is "Point". Knowing this, the compiler can know say "call Point.distance
+    nArgs", and method declaration in vm can be the same as other subroutines, just "function
+    Point.distance nVars". This will just avoid all the problems stated above
+
+    (This is written after I wrote the compiling methods part)
+    In the examples that the instructors gave in "compiling methods", "other.getx()" is compiled
+    and the method call is "call Point.getx 1". Which means all the stuff I said above is probably
+    and hopefully, correct.
+
+
+
+Compiling methods
+=====================================================================================================
+
+Example method:
+class Point {
+    field int x,y;
+    static int pointCount;
+
+    method int distance(Point other){
+        var int dx,dy;
+        let dx = x - other.getx();
+        let dy = y - other.gety()
+        return Math.sqrt((dx*dx) + (dy*dy)); 
+    }
+
+}
+
+Let's start compiling
+The first thing the compiler will encounter "class Point;field int x,y; static int pointCount", 
+again, the compiler wont generate any code, it will just setup/update the class-level symbol table.
+
+Then, the compiler will encounter "method int distance(Point other)" and "var int dx,dy", the 
+compiler will again generate no code, and will only update the subroutine's symbol table.
+(Thought the compiler will generate "function distance" ..., but the instructors say that they
+won't generate any code, so aight.)
+
+Well now, the compiler knows that it is generating code for a method.
+Well we know that methods are used to manipulate objects,and we know that the first argument in 
+a method call is the object to manipulate. So we should set "THIS" to argument 0,that way "this 0",
+will be the first property of the object to manipulate, and we can access all of the properties of 
+the object.
+
+So,
+
+push argument 0
+pop pointer 0
+
+now "THIS" is set to the address of the object's properties, "this 0" will be the first property
+of the object, etc etc.
+
+(we already know how to deal with the variable declarations so I'll skip over that)
+
+The current symbol tables:
+
+-------------------------------  
+| name      | type | kind | # |  
+------------------------------- 
+| x         | int  |field | 0 | 
+| y         | int  |field | 1 | 
+| pointCount| int  |static| 0 |
+-------------------------------
+
+--------------------------------
+| name  | type   | kind    | # |
+-------------------------------
+| this  | Point  |argument | 0 |
+| other | Point  |argument | 1 |
+| dx    | int    |local    | 0 |
+| dy    | int    |local    | 1 |
+--------------------------------
+
+
+Now the compiler will encounter "let dx = x - other.getx();"
+We take a look at the class-level symbol table, and see that "x" is the first field/property of any
+Point object. So
+
+push this 0
+push argument 1
+call Point.getx 1
+sub
+pop local 0
+
+The "let dy = y - other.gety()" statement is handled the same way, so Im not going to repeat it
+
+Then the compiler will encounter the return statement, this does not really deal with objects and 
+methods, so you can just skip past this vmcode if you want
+
+push local 0
+push local 0
+call Math.mult 2
+push local 1
+push local 1
+call Math.mult 2
+add
+call Math.sqrt 1
+return
+
+Remember that a method MUST return something to the caller, it is required to return a value to
+the caller in the vm language
+
+Final vm code:
+//method int distance(Point other)
+//var int dx,dy
+//The compiler constructs the symbol table, no code is generated
+//Now, we should set "THIS" to argument 0, which is the object that the caller wants the method
+//to operate on.
+
+pop argument 0
+pop pointer 0
+
+//let dx = x - other.getx()
+push this 0
+push argument 1
+call Point.getx 1
+sub
+pop local 0
+
+//let dy = y - other.gety()
+push this 1
+push argument 1
+call Point.gety 1
+sub
+pop local 1
+
+//return Math.sqrt((dx*dx)+(dy*dy))
+push local 0
+push local 0
+call Math.mult 2
+push local 1
+push local 1
+call Math.mult 2
+add
+call Math.sqrt 1
+return
+
+
+So now we know how to compile method calls, but there are still some stuff we have to discuss about
+methods
+
+
+
+Compiling void methods
+=====================================================================================================
+Void methods are just methods that don't return any value.
+
+Example:
+
+Method call:
+...
+do p1.print();
+...
+
+Method:
+method void print(){
+    //code omitted
+}
+
+
+Remember that it is REQUIRED to return a value in vm language, it is required to push a return value
+on the stack before returning.
+
+So when you are compiling a VOID method,you should add a "push constant 0" before return
+
+(We did not discuss anything about void constructors in the compiling constructors part simply 
+because it is REQUIRED to return "this" before. There are just void functions and void methods.)
+
+So compiled method vm code:
+
+//method void print()
+push argument 0
+pop pointer 0
+
+//compiled code omited
+
+push constant 0
+return
+
+
+But now, when the method returns to the caller's code, the caller now has a dummy value on the stack
+So when you are compiling the void method call, you should add a "pop temp 0" after the 
+"call Point.print" to get rid of the dummy value and keep the stack clean.
+
+(I'm going to make an assumption that every time the compiler compiles a do statement, it should add
+a "pop temp 0" after "call function nArgs". Since it is required to return a value before returning
+in the vm language, and using a do statement just means that the Jack programmer does not want
+to do anything with the return value.)
+
+So the compiled method call vmcode:
+
+push p1
+call Point.print
+pop temp 0
+
+
+So now we have discussed everything about compiling objects. Nice!

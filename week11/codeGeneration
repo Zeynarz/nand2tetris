@@ -224,7 +224,7 @@ notes)
 | this  | Point  |argument | 0 |
 | other | Point  |argument | 1 |
 | dx    | int    |local    | 0 |
-| dy    | int    |local    | 0 |
+| dy    | int    |local    | 1 |
 --------------------------------
 
 Whenever you create a symbol table for a method, the first entry must always be "this" with kind 
