@@ -1,0 +1,343 @@
+HANDILNG ARRAYS
+------------------
+Array is just another class in the Jack OS library.
+
+(These are my own thoughts here)
+But I don't think that creating an array is the same as creating an object in Jack. Arrays 
+in Jack are not objects. I don't think that Array.new(n) is actually a constructor. 
+I think that Array.new(n) is actually just a function that calls Memory.Alloc(n), and then
+returns the pointer to the caller.
+
+The only special thing about Arrays is that you can access an array using syntax like
+a[2],a[x],a[expression] ... , we will actually deal with this later HERE.
+Other than that, arrays are just memory blocks.
+
+Arrays unlike objects, don't have properties, and dont't have methods.
+
+The accessing arrays with a[expression] part is actually handled by the compiler.
+So I am pretty sure that most of the magic of arrays, are in the compiler.
+
+But then again, I might be terribly wrong. I will know for sure once I start and finish week12.
+
+
+Compiling Array Construction
+=====================================================================================================
+Example code:
+
+var Array arr;
+...
+let arr = Array.new(5);
+...
+
+After the example code is executed, the RAM should look something like this:
+
+             ------------------  
+arr    ->    |8054            |  <-|  
+             |...             |    |-- STACK    
+             |...             |  <-|     
+             |...             |                                                                        
+8054   ->    |?               |  <-|                                
+8055   ->    |?               |    |       
+8056   ->    |?               |    |-- HEAP       
+8057   ->    |?               |    |       
+8058   ->    |?               |    |       
+             |...             |  <-|
+             ------------------
+
+(How Array.new() allocated this space in the heap and more will be discussed in the OS module)
+
+This example code is just a subroutine call, which we already know how to compile and handle.
+So there is actually nothing new here.
+
+When the compiler encounters "var Array arr", it will just update the symbol table, and when the
+compiler encounters "let arr = Array.new(5)", it will just push 5 onto the stack, call Array.new,
+then pop the return value into arr.
+
+
+Compiling Array Manipulation
+=====================================================================================================
+Remember that there are the "this" and "that" memory segments in the vm language.
+We used "this" to handle objects, and now we are going to use "that" to handle arrays.
+
+When we wanted to access the "THIS" pointer, we used "pop/push pointer 0",to access the "THAT" 
+pointer, we just need to use "pop/push pointer 1"
+
+We set the "THIS" pointer to the base address of the currently selected object when we were handling
+with objects to manipulate the object's properties. Similarly, we will set the "THAT" pointer to the 
+array we want to manipulate to access it.
+
+
+Let's look at an example of accessing RAM using "that":
+
+//RAM[8056] = 17
+push 8056
+pop pointer 1 // THAT = 8056 , so "that 0" = RAM[8056]
+push 17
+pop that 0
+
+
+Now that we know about all this, we can talk about accessing array elements.
+
+Example code:
+
+var Array arr;
+let arr = Array.new(5);
+
+let arr[2] = 17
+
+We already know how to compiler the first two lines, but how can we compile "let arr[2] = 17"?1
+
+push arr
+push 2
+add
+pop pointer 1
+
+So we push the address of the array, and add 2 to it. So now in runtime, the topmost value on the 
+stack should be the address of arr[2]. If the array was at address 8056, then the top most value
+on the stack is 8058, which is what we want.
+
+We the pop this address into "THAT",so now "THAT" is pointing at arr[2]. So now, we can just pop
+17 into "that 0", and arr[2] will be equals to 17.
+
+push 17
+pop that 0
+
+If we were in runtime, the RAM right now would look like this:
+
+             ------------------  
+THAT   ->    |8056            |  ---------------  
+             |...             |                |
+arr    ->    |8054            |  <-|           |
+             |...             |    |-- STACK   |
+             |...             |  <-|           |
+             |...             |                |                                       
+8054   ->    |?               |  <-|           |                    
+8055   ->    |?               |    |           |
+8056   ->    |17              |  <-|------------        
+8057   ->    |?               |    |       
+8058   ->    |?               |    |-- HEAP       
+             |...             |  <-|
+             ------------------
+
+Now you might wonder, why don't we just set "THAT" to the base address of the array,8054, and then
+use pop that 2 to access arr[2]:
+
+push arr
+pop pointer 1
+push 17
+pop that 2
+
+Wouldn't this be simpler?
+
+Well, it might work in this case, but we are trying to write a generic way of compiling array
+manipulation. What happens if instead of "arr[2] = 17", we have "arr[x] = 17",
+
+push arr
+pop pointer 1
+push 17
+pop that x??? (No such vmcommand)
+
+So we have to use the way stated above, because this way can also handle stuff like "arr[x] = 17"
+
+push arr
+push x
+add
+pop pointer 1
+push 17
+pop that 0 
+
+
+Besides that,notice that this way that I stated above, this vm code, works no matter if the array
+is located at address 8500, or at address 13000. The vmcode works no matter if the RAM has 32K words, 
+or 128K words. So this code works on any platform. The code works for the Hack computer, and it can
+also work on an Intel computer (as long as there is a vm translator from vm language to intel).
+
+
+Alright, so now let's write a more general code/description for array manipulation.
+
+//arr[expression1] = expression2
+push arr
+compiled(expression1)    
+add
+pop pointer 1
+compiled(expression2)
+pop that 0
+
+
+Great! Now we know how to compile array manipulations! Right?
+Well unfortunately,no, there is a problem with the code/way that I stated above.
+
+The problem happens when compiling things like "a[i] = b[j]"
+
+Following what we did before,
+
+// a[i]
+push a 
+push i 
+add 
+pop pointer 1
+
+// b[j]
+push b
+push j
+add 
+pop pointer 1 <- PROBLEM!
+push that 0 
+
+The "pop pointer 1"  at "b[j]" will overwrite the "THAT" pointer that was initially pointing at 
+a[i]
+
+This method will simply not work out and we need a better solution
+
+
+The better solution:
+
+First we make the topmost value of the stack the RAM adderss of b[j], and the second topmost
+value be the RAM address of a[i]
+
+push a 
+push i
+add     // Stack now has a[i] address
+
+push b
+push j
+add     // Stack now has b[j] address
+
+
+Stack:
+        -----------------
+        |address of a[i]|
+        |address of b[j]|
+SP  ->  |...            |
+        -----------------
+
+And then we are going to pop the topmost value, the address of b[j] into "THAT" 
+
+pop pointer 1
+
+Stack:
+        -----------------
+        |address of a[i]|
+SP  ->  |...            |
+        -----------------
+
+Now "THAT" is pointing to b[j], we can use "that 0" to access the element b[j].
+
+push that 0
+pop temp 0
+
+Now temp 0 contains the element b[j]. So we can just pop temp 0 into a[i]. Also remember that
+the current topmost value of the stack is the address of a[i]
+
+pop pointer 1  // "THAT" is now pointing at a[i]
+push temp 0
+pop that 0
+
+And this will accomplish what we want.
+This solution unlike the previous one, will always work.
+
+The general code of the solution:
+
+// arr[expression1] = expression2
+push arr
+compile(expression1)
+add
+compile(expression2)
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+    
+
+Evaluation of expression2 can use pointer 1 and that 0 safely.
+
+So now, we ACTUALLY know how to compile array manipulations.
+
+Own comments:
+    In codeWrite, we probably need to add a new if statement for array access like arr[2] etc since
+    arr[2],b[x] etc are actually expressions in the grammar.
+    
+    So like
+    if (is an array access,arr[expression])
+        push arr
+        codeWrite(expression)
+        add
+        pop pointer 1
+        push that 0
+
+   
+    This also works for complicated expressions like arr[b[i]]:
+    
+        push arr
+
+        //codeWrite(expression)
+        push b
+        push i
+        add
+        pop pointer 1
+        push that 0
+
+        add
+        pop pointer 1
+        push that 0
+
+    My second comment is that before compiling stuff like "let x[i] = 3", the compiler should
+    look up the symbol table and check if "x" is indeed type Array. If we don't do this check,
+    then stuff like "var int x; let x[3] = 12" will be possible. The compiler will generate code
+    that sets "THAT" to x+3 which is 0+3 (because local variables are initialized to 0,the vm 
+    implementation implemented it to be this way). If "THAT" is pointing at address 3, then
+    RAM[3] will be set to 12, and all sorts of bugs will occur.
+
+
+Examples of using the new method
+=====================================================================================================
+
+Example 1:
+//arr[2] = 17
+
+push arr
+push 2
+add
+push 17
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+
+Example 2:
+//arr[x] = y+12
+
+push arr
+push x
+add
+push y
+push 12
+add
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+
+Example 3:
+//arr[a[i]] = b[c[j]]
+
+
+Own solution
+=====================================================================================================
+I have actually thought of my own solution for compiling array manipulations that does not use the
+temp memory segment and has fewer lines of vm code:
+
+compile(expression2)
+push arr
+compile(expression1)
+add
+pop pointer 1
+pop that 0
+
+I am not sure if there are any edge cases or any fatal errors in this solution, I'm just putting 
+this here for fun. 
+
+Examples of using this solution:
+// arr[x]
+
+
