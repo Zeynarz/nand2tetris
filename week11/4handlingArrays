@@ -337,7 +337,9 @@ pop that 0
 I am not sure if there are any edge cases or any fatal errors in this solution, I'm just putting 
 this here for fun. 
 
+(The instructors have probably also thought of this solution but decided that the solution they gave
+was better)
+
 Examples of using this solution:
 // arr[x]
-
 

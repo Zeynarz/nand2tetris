@@ -1,0 +1,192 @@
+RECAP 
+------
+(This is basically a brief recap/summary on things that we have discussed in previous notes,there are 
+also some additional stuff and reminders)
+
+
+Files and subroutine stuff
+=====================================================================================================
+Example (Foo.jack):
+class Foo{
+    
+    constructor Foo new(int x) {}
+
+    method void bar(int x ) {}
+    
+    function int baz(int x) {}
+
+}
+
+Foo.jack -> JackCompiler -> Foo.vm
+Each fileName.jack is compiled into fileName.vm
+
+Each subroutine subName in fileName.jack is compiled into a vm function fileName.subName
+So "method void bar(int x) {}" is compiled into "function Foo.bar"
+
+A Jack constructor / function with k arguments is compiled into a VM function that operates on k 
+arguments as well.
+For example, the constructor new only has one argument in Jack,so at the VM level it will also only
+have one argument. 
+
+A Jack method with k arguments is compiled into a VM function that operates on k+1 arguments.
+For example, the method bar only has one argument in Jack, but at the VM level, it will have two 
+arguments. ("argument 0" is the object to operate on, "argument 1" is "x")
+
+
+Every subroutine in Jack is compiled to "function fileName.subName nVars" in vm code,so at the
+vm level, you can't simply tell if a function was orginally a constructor or a method or a function
+in Jack.
+
+Using the example above,the three subroutines will be compiled to "function Foo.new", "function 
+Foo.bar" and "function Foo.baz".
+
+Just by looking at "function Foo.bar", you could not tell if Foo.bar was originally a method,function
+or constructor in Jack.
+
+So the notion of constructors,methods are kind of lost at the vm level
+
+(Of course you can just read the code of "function Foo.bar",and see that "push argument 0; push
+pointer 1" is present, and thus conclude that Foo.bar is a method.But to identifiy the "kind" of a
+subroutine is harder and require more steps at the vm level than atthe Jack level)
+
+
+Variables 
+=====================================================================================================
+There are four kinds of variables in Jack. (local,arguments,static,field)
+
+Local variables:
+are stored in the local memory segment at the vm level. If you have two local variables "x" and "y",
+in a subroutine, then "local 0" is "x", and "local 1" is "y".
+
+Argument variables:
+are stored in the argument memory segment at the vm level. If you have two arguments "a" and "b", in
+a subroutine, then "argument 0" is "a", and "argument 1" is "b".
+
+Static variables:
+are stored in the static memory segment at the vm level. Static variables are accessible to the
+whole class.
+
+Field variables:
+of an object is accessed by first setting the "THIS" pointer to point to the object's properties,
+then using "this n" to access the nth property. So if object Player = 8500, and you want to access
+Player's first property, you first set "THIS" to point to 8500, then use "this 0" to access Player's
+first property.
+
+
+Arrays
+=====================================================================================================
+To access an array entry, for example arr[i], you need to:
+-first set "THAT" to point to (arr + i).
+-then simply access the array entry using "that 0"
+
+Lets say that array arr = 7800, that means that the entries of the array are stored at RAM[7800].
+So to access arr[2], first set "THAT" to 7800+2=7802, then use "that 0" to access arr[2].
+
+Reminder:
+           ------------------  
+9500 ->    |3               |  
+9501 ->    |18              |
+           |...             |  
+           ------------------  
+
+RAM[9500] = 3,RAM[9501] = 18
+
+
+Compiling subroutines
+=====================================================================================================
+Compiling Jack methods:
+    Remember that before calling a method at the vm level,you first push the object you want the 
+    method to operate on, then you push the method arguments. So when you are actually in the method
+    , "argument 0" is the object the caller wants the method to operate on.
+
+    So when compiling a Jack method,you should set "THIS" to "argument 0", the compiler should 
+    generate the code "push argument 0;pop pointer 0". This will allow the method to access 
+    the object's properties by saying "this 0" etc .
+
+Compiling Jack constructors:
+    The compiler should generate code that allocates a memory block for the new object, and then
+    set "THIS" to the base address of the memory block.
+
+    This way, when the constructor wants to access the newly constructed object's properties, it
+    can just use "this 0" etc to access them.
+
+    Remember that the compiled vm code must return the object's base address to the compiler.
+
+Compiling void functions / methods:
+    At the vm level, it is required that every vm function returns a value.
+
+    Although at the Jack level it looks like you can choose not to return a value by saying that
+    a function is type "void", but under the hood at the vm level, void functions return a value
+    as well.
+
+    The compiled vm code of a void function must return the value "constant 0"
+
+    The caller of the void subroutine has to dispose this "constant 0" when the subroutine returns
+    to make sure the stack is clean and there are no random unused values on the stack that can 
+    potentially cause errors.
+
+
+Compiling subroutine calls
+=====================================================================================================
+Subroutine call: subName(arg1,arg2,...);
+
+The caller must push the arguments onto the stack first, then call the subroutine
+
+If the subroutine is a method. The caller must first push the object it wants the method to operate
+on, then push the arguments of the method, then call the method.
+
+Example:
+method call: obj1.move(3)
+
+push obj1
+push 3
+call Foo.move
+
+(push obj1 means pushing the address of obj1's properties)
+
+
+If the subroutine is a void subroutine, a dummy value will be returned to the caller,so the caller
+should dispose the dummy value when the callee returns.
+
+(When compiling do statements,you should also dispose and pop the dummy value after the callee
+returns, because since it is a do statement, the Jack programmer probably does not want anything to
+do with the return value of the callee.)
+
+
+Compiling constants
+=====================================================================================================
+When the compiler encounters "null", just use "constant 0". So for example "let x = null", the
+vm code should be "push constant 0;pop x".
+
+When the compiler encounters "false", just use "constant 0"
+
+When the compiler encounters "true", use "push constant 0; neg" to make "-1".
+
+(Anything other than 0, is true, so 17 is true, 4239 is true, 0 is false)
+
+
+OS library classes and subroutines
+=====================================================================================================
+The Jack OS library has several classes like Math,Memory,String etc.
+All these classes are already compiled into vm files. So there is already a Math.vm,Memory.vm etc.
+
+The OS class vm files must be in the same directory as the VM files generated by the compiler.
+So if there was a program for the Jack compiler to compile, after the Jack compiler compiled 
+the program to vm files, the OS class vm files should be in the same directory as well.
+
+This way, the compiled program can call and use any OS VM function.
+
+Other OS library stuff
+=====================================================================================================
+Whenever the compiler encounters multiplication, it should generate code that calls the OS function 
+Math.multiply(). 
+
+Same thing for division, if the compiler encounters division, it should generate code that calls
+the OS function Math.divide().
+
+
+String constants are created using the OS constructor String.new()
+
+String assignments like 'let str = "Hello World"' are handled using a series of calls to 
+String.appendChar(c).
+
