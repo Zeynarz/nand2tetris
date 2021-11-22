@@ -176,6 +176,17 @@ the program to vm files, the OS class vm files should be in the same directory a
 
 This way, the compiled program can call and use any OS VM function.
 
+
+Let's say that Foo.jack has a subroutine call to Output.printInt()
+If the OS library vm files weren't in the same directory as compiled Foo.jack,then how can the 
+programs call OS library subroutines like Output.printInt() since those subroutines were never defined
+
+When Foo.vm is translated to assembly, the translated "call Output.printInt 1" will include a 
+"@Output.printInt" A-instruction, if the OS library vm files aren't in the same directory, then the
+final .asm file won't contain the label "(Output.printInt)", so errors will come up when using the
+assembler or during runtime.
+
+
 Other OS library stuff
 =====================================================================================================
 Whenever the compiler encounters multiplication, it should generate code that calls the OS function 
@@ -185,8 +196,20 @@ Same thing for division, if the compiler encounters division, it should generate
 the OS function Math.divide().
 
 
-String constants are created using the OS constructor String.new()
+Strings are created using the OS constructor String.new()
 
 String assignments like 'let str = "Hello World"' are handled using a series of calls to 
 String.appendChar(c).
+
+So 'let str = "ABC"' is actually compiled to (I think):
+
+push 3
+call String.new
+push "A" // The corresponding decimal of "A" in ascii
+call String.appendChar 2
+push "B"
+call String.appendChar 2
+push "C"
+call String.appendChar 2
+pop str
 

@@ -257,6 +257,9 @@ Own comments:
     In codeWrite, we probably need to add a new if statement for array access like arr[2] etc since
     arr[2],b[x] etc are actually expressions in the grammar.
     
+    expression: term (op term)*
+    term: integerConstant | stringConstant | ...... | varName '[' expression ']' | ...
+
     So like
     if (is an array access,arr[expression])
         push arr
@@ -321,6 +324,36 @@ pop that 0
 Example 3:
 //arr[a[i]] = b[c[j]]
 
+push arr
+
+// a[i]
+push a
+push i
+add
+pop pointer 1
+push that 0
+
+// arr + a[i]
+add
+
+push b
+
+// c[j]
+push c
+push j
+add
+pop pointer 1
+push that 0
+
+// b + c[j]
+add
+pop pointer 1
+push that 0
+
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
 
 Own solution
 =====================================================================================================
@@ -341,5 +374,45 @@ this here for fun.
 was better)
 
 Examples of using this solution:
-// arr[x]
+Example 1:
+// arr[x] = 12
+
+push 12
+push arr
+push x
+add
+pop pointer 1
+pop that 0
+
+
+Example 2:
+//arr[a[i]] = b[c[j]]
+// b[c[j]]
+push b
+
+// c[j]
+push c
+push j
+add
+pop pointer 1
+push that 0
+
+// b + c[j]
+add
+pop pointer 1
+push that 0
+
+push arr
+
+// a[i]
+push a 
+push i
+add
+pop pointer 1
+push that 0
+
+// arr + a[i]
+add
+pop pointer 1
+pop that 0
 

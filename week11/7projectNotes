@@ -1,0 +1,135 @@
+Objective: Extend the JackAnalyzer into a full-scale compiler
+
+This is done in two stages :
+Stage 1: symbol table handling( )
+Stage 2: code generation
+         -Seven( ) -ConvertToBin( ) -Square( ) -Average( ) -Pong( ) -ComplexArrays( )
+
+(d) means done
+
+
+Stage 1
+==========================================================================================================
+To test if Stage 1 is succesfully developed, we will use the compiler to generate richer xml code, that
+contains more information about identifiers
+
+More information includes:
+-the identifier's category: class,subroutine,var/local,argument,static,field
+-if the identifier's category is var/local,argument,static,field, more information includes the index
+ of the variable of its kind.
+-whether the identifier is being defined (var int x,constructor Point new ...), or being 
+ used (let x = ...,let p1 = Point.new()... )
+
+(right now, "var" and "local" are the same thing)
+
+
+So if the JackAnalyzer outputs something like:
+    <identifier> count </identifier>
+
+After Stage 1 is developed, the compiler should output something like
+    <local 0> <using> count </using> </local 0>
+
+(Use your own output format)
+
+The aren't any provided xml files for stage 1,so you don't have any files to compare your output file to 
+and see if the two output files are identical
+
+To determine if Stage 1 is actually succesfully devloped, you can simply look at the files and read the
+identifier's information and determine yourself.
+
+
+Stage 2
+==========================================================================================================
+There are six test Jack programs:
+-Seven -ConvertToBin -Square -Average -Pong -ComplexArrays
+
+These 6 Jack programs will get more and more difficult to compile
+So "Seven" is the easiest to compile, and "ComplexArrays" is the hardest to compile
+
+The compiler will be developed in stages, so you will do whatever is necessary to the compiler in order
+to translate the next program.
+
+So first, you will do whatever is necessary to compile "Seven", then you will add more functionality 
+to the compiler and be able to compile "ConvertToBin",then "Square","Average" etc etc.
+
+
+Let's say that you think your compiler has enough functionality to compile "Square" and you want to
+test it.
+
+Well you compile the "Square" directory,and if you think the generated code has no problems,you load 
+the directory into the VM Emulator.
+
+Once you run the compiled program in the VM Emulator, you can inspect the results of the program (the
+program .jack files tells you what to look for) and you can thus determine if the compiler is working
+correctly.
+
+ALL of the test Jack programs are completely error-free, so if there are any errors in the VM Emulator,
+it can only mean that the compiler is not working properly and you have to fix the compiler.
+
+
+Now we will talk a little about the six test Jack programs.
+
+Seven:
+    This program tests how your compiler handles
+    - a simple program
+    - an arithmetic expression involving constants only
+    - a do statement
+    - a return statement
+    
+    If your compiler works fine, when you load the compiled program into the vm emulator, there should
+    be a "7" at the top left corner of the screen
+
+    Developing the compiler: Whenever we generate code for a do statement, we must also generate code
+                             that pops the return value of the callee into temp, this is because when
+                             the high level programmer uses a do statement to call a subroutine, it 
+                             also means that the programmer does not want anything to do with the return
+                             value of the subroutine, so we pop the dummy value into temp to keep the 
+                             stack clean and avoid unnecessary errors.
+
+
+(Remember that if your compiler couldnt handle "Seven", it cannot handle "ConvertToBin", remember that
+the programs get progressively more difficult to compile and need more functionality to compile)
+
+
+ConvertToBin:
+    This program just converts decimal to binary, for example if you give this program 171, it will
+    give you 10101011
+
+    To test the compiled program in the VM Emulator:
+    1. put some value into RAM[8000]
+    2. Check that RAM[8001]..RAM[8016] contains the correct binary result
+
+    This program tests how your compiler handles:
+    - expressions (without arrays or method calls)
+    - the 5 statements: if,while,do,let,return
+
+    So before you test your compiler with this program, you have to add these functionalities and the
+    ability to handle these things to your compiler.
+
+
+Square:
+    This program tests how your compiler handles:
+    - constructors
+    - methods
+    - expressions that include method calls
+
+Average:
+    This program tests how your compiler handles:
+    - Arrays
+    - Strings
+
+Pong:
+    This program tests how your compiler handles a completely object-oriented application, including
+    the handling of objects and static variables.
+
+    If your compiler works perfectly, when you run the compiled program in the VM emulator, you can 
+    play the pong game.
+
+ComplexArrays:
+    This program tests how your compiler handles array manipulations that use complicated indexes.
+    For example: a[b[a[3]]]
+
+    When the compiled program runs in the VM Emulator, it will say the expected result, and the result
+    the compiled program / vmcode produced, if the two results are the same, that means that your 
+    compiler is working perfectly.
+

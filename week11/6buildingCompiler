@@ -1,0 +1,153 @@
+ACTUALLY BUILDING/IMPLEMENTING THE COMPILER
+----------------------------------------------
+The compiler contain 5 classes:
+-JackCompiler: is essentially "main"
+-JackTokenizer
+-SymbolTable
+-VMWriter: generates VM code
+-CompilationEngine
+
+To use the compiler :
+
+cmdline > JackCompiler input
+
+The input could be a single Jack file "fileName.jack", or a whole directory.
+
+If the input is a single Jack file, a single "fileName.vm" file will be outputed
+If the input is a whole directory, each .vm file will be outputed for every .jack file
+
+
+For each .jack file, the compiler creates a JackTokenizer, SymbolTable,CompilationEngine,VMWriter etc obj,
+not too sure tho 
+
+The JackTokenizer is already developed in project 10, and it does not require any tweaks.
+
+
+The SymbolTable class
+=======================================================================================================
+The compiler only need two symbol tables. One for the class-level, and one for the subroutine-level.
+(I'm pretty sure a new SymbolTable object is created for each class,and the SymbolTable object holds
+both the class-level and subroutine-level symbol table)
+
+The class-level symbol table will be reset each time we start compiling a new class.
+The subroutine-level symbol table will be reset each time we start compiling a new subroutine.
+
+When you start compiling a new class,the previous class's variables are not needed anymore since
+the previous class is already compiled and it is now a different scope, so it can be reset.
+(A class cannot access another class's field and static variables,they are of different scopes)
+
+
+Each variable in the symbol table contains its varName,type,kind and index
+
+Example symbol table:
+
+-------------------------------- 
+| name  | type   | kind    | # |                        
+--------------------------------                         
+| this  | Point  |argument | 0 | 
+| other | Point  |argument | 1 |     
+| dx    | int    |local    | 0 | 
+| dy    | int    |local    | 1 | 
+--------------------------------
+
+The API of the SymbolTable class : api/SymbolTableAPI.png
+
+You might wonder why there is no "startClass()" subroutine in the API,well I'm pretty sure that a new
+SymbolTable object is created for every class.
+
+So when you start compiling a new class/file, you will create a new SymbolTable object, and will get 
+a fresh class-level SymbolTable. 
+
+Unlike the class-level symbol table, the subroutine symbol table needs to be reset each time you encounter
+a new subroutine. There are multiple subroutines in a class, so you have to reset it multiple times in 
+a SymbolTable object, so we have the "startSubroutine()" subroutine in the API.
+
+define() is just used to add an entry in one of the symbol tables, if the type is "static" or "field", 
+define() will add the variable into the class-level symbol table, and if the type is "local" or 
+"argument", define() will add the variable into the subroutine-level symbol table
+
+
+VarCount() is very helpful in certain places for generating code
+For example you are compiling a constructor, and the compiler has to figure out how much space the 
+object takes/how many properties it has(n), and has to generate code that calls Memory.Alloc with n.
+
+For example let's say that class Player has 3 properties, and the compiler is compiling the constructor
+of Player.
+
+The compiler can call symbolObj1.VarCount("field") to find out that class Player has 3 properties, and
+generate the following code:
+
+push 3
+call Memory.Alloc
+pop pointer 0
+
+
+"KindOf","TypeOf" and "IndexOf" are very also helpful subroutines.
+For example:
+Source code: "let x = 16"
+
+you use "KindOf" and "IndexOf" to find that "x" is actually "local 2" ("local 2" is completely arbitary)
+So you can generate the code:
+
+push constant 16
+pop local 2
+
+REMINDER: "KindOf","TypeOf" and "IndexOf" should look for the variable at the subroutine-level symbol
+          table first, then look for the variable at the class-level symbol table
+
+Example:
+
+Source code:
+class Foo {
+    static int x;
+
+    function void Bar(){
+        var int x;
+    }
+}
+
+class-level symbol table:
+-------------------------------- 
+| name  | type   | kind    | # |                        
+--------------------------------                         
+| x     | int    |static   | 0 | 
+-------------------------------- 
+
+subroutine-level symbol table:
+-------------------------------- 
+| name  | type   | kind    | # |                        
+--------------------------------                         
+| x     | int    |local    | 0 | 
+-------------------------------- 
+
+KindOf("x") should return "local", not "static".
+
+
+A symbol table can actually be implemented using a hash table/hash map/dictionary (All three are the same
+thing)
+
+One dictionary for the class-level symbol table, one dictionary for the subroutine-level symbol table
+
+A tip for implementing the compiler:
+When compiling an error-free Jack code, each identifier not found in the two symbol tables can be assumed
+to be either a subroutine name or a class name.
+
+
+The VMWriter class
+=======================================================================================================
+The VMWriter generates and writes VM code to the output .vm file
+
+The API of the VMWriter: api/VMWriterAPI.png
+
+This class is relatively straight forward and simple to develop.
+I think this class will make the code for the compiler look much cleaner and readable.
+
+
+The CompilationEngine class
+=======================================================================================================
+The CompilationEngine gets its input from a JackTokenizer and writes its output using the VMWriter
+
+The CompilationEngine is already developed in project 10,but we still have to make some tweaks to the
+code of CompilationEngine and morph the CompilationEngine so that it doesn't write xml code anymore, and
+instead uses the VMWriter to generate vm code.
+
