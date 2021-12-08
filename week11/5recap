@@ -160,7 +160,9 @@ vm code should be "push constant 0;pop x".
 
 When the compiler encounters "false", just use "constant 0"
 
-When the compiler encounters "true", use "push constant 0; neg" to make "-1".
+When the compiler encounters "true", use "push constant 0; not" to make "-1".
+(Remember: not turns bits 111 to 000(flip the bits), neg turns -3 to 3 or 3 to -3)
+(not = NOT,neg = negative)
 
 (Anything other than 0, is true, so 17 is true, 4239 is true, 0 is false)
 

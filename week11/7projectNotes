@@ -1,9 +1,10 @@
 Objective: Extend the JackAnalyzer into a full-scale compiler
+(If I rmb correctly,the compiler expects an error-free Jack file)
 
 This is done in two stages :
-Stage 1: symbol table handling( )
+Stage 1: symbol table handling (d)
 Stage 2: code generation
-         -Seven( ) -ConvertToBin( ) -Square( ) -Average( ) -Pong( ) -ComplexArrays( )
+         -Seven (d) -ConvertToBin (d) -Square (d) -Average (d) -Pong (d) -ComplexArrays (d)
 
 (d) means done
 

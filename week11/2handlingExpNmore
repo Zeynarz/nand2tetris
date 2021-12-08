@@ -451,6 +451,10 @@ label L2
 wouldn't this be a simpler pseudo vm code? Does negating the expression really make the code 
 generation tighter and simpler for if statements?)
 
+(Now I know, the instructor's pseudo vm code is better since it follows the structure of the jack code, so the
+writing the compiler is an easier job. In the jack code, you first encounter expression,then statement1,then
+statement2, so the instructor's code is better)
+
 Translating while statements
 ==================================================================================================
 
