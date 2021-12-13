@@ -1,0 +1,329 @@
+OPERATING SYSTEM
+=================================================================================================
+An operating system is just something that provides services
+
+The goal of the operating system is to close many gaps that exists between high level programming
+and the hardware your programs are going to execute on
+
+Without an operating system, it would be very hard to write high level programs like Pong. 
+Operating system provides a library of classes like Keyboard and Output to help you develop
+complex programs.
+
+Every modern high level language comes with a standard library that supports it, like stdlib for
+C++.
+
+So you can kind of think of an OS as a standard library, but it is more than that, an OS also 
+provides tons of system oriented services.
+
+
+Typical OS Services
+----------------------
+So a typical OS can be viewed as / provides:
+-a standard library
+-system oriented services
+
+The standard library provides functionalities like:
+-mathematical operations (abs,sqrt,...)
+-abstract data types (String,Array,...)
+-input functions (readChar,readLine,...)
+-textual output (printChar,printString,...)
+-graphics output (drawLine,drawCircle,...)
+...
+
+So as a high level programmer,if you have an os,you can just expect to get all sorts of 
+mathematical operations, support to abstract data types etc
+
+You wouldn't have to worry about implementing your own sqrt function, you wouldn't have to worry
+about the implementation of drawing a line on the screen etc
+
+So as developers of operating systems, you have to support all these functionalities and 
+abstractions,and try to make them as efficient as possible, since all high level programs are
+going to run on top of your implementation.
+
+
+Remember that an OS also provide system-oriented services,which are a little more low-level
+
+Examples:
+-memory management (objects,arrays,...)
+ Provide functionalities to handle the host memory (RAM), like Memory.alloc so the high level
+ programmer can allocate space easily without worrying about anything.
+  
+-file system (like FAT)
+ OS should be able to manage storage like hard disks etc using file systems, and the user of 
+ the OS should be able to use this file system to store stuff and access stuff in folders etc.
+
+-I/O device drivers
+ The OS developer also needs to develop tons of device drivers, device drivers are just programs
+ that manage devices like a mouse,keyboard,mic,earbuds,printers etc. (A keyboard device driver
+ prob keeps reading from the IO mapped memory, idk)
+
+-UI management (shells / windows)
+ Shells or windows need to be developed so that users of the computer can actually talk to the 
+ computer and use the computer to do stuff 
+
+-multitasking
+ The OS should support multi-tasking, handle multiple processes , and run several programs at 
+ the same time.The user should be able to like listen to music while playing games etc
+ (would like to learn more on how a computer can run several programs at the same time)
+
+-networking
+ The OS should support the ability to interact with other computers.
+
+-security
+ The OS should try to mitigate/prevent stuff like buffer overflows, double frees etc
+
+...
+
+We're not going to develop a full blown OS in nand2tetris.
+The OS we are building in nand2tetris will include all the standard library stuff, the memory 
+management part will also be developed and some I/O device drivers will also be developed
+
+So the nand2tetris OS focuses more on the standard library part, and will touch on a little of the
+system oriented services part.
+
+
+The Jack OS
+--------------
+The Jack OS is the OS we are going to build in nand2tetris
+
+The Jack OS consists of 8 classes:
+-Math (abs,multiply,...)
+-Memory (peek,poke,alloc,deAlloc) (this class is actually classical/standard,it contains 
+         fundamental operations which exists in any OS)
+
+-Screen (clearScree,drawPixel,...)
+-Output (moveCursor,printChar,...)
+-Keyboard (keyPressed,readChar,...)
+-String (new,dispose,...)
+-Array (new,dispose) (unlike other programming languages,arrays are not a primitive type of the 
+                      language,and is implemented in the OS part)
+
+-Sys (halt,error,wait)
+
+
+There are people who make a living from developing operating systems, and these people basically
+fall into two categories:
+
+The first category is theoreticians,people who are experts in algorithms and data structures.
+They take requirements like those we have here (multiply,etc) and come up with all sorts of 
+ingenious algorithms and data structures to deliver and make sure these requirements run 
+efficiently
+
+There's another class of people (second category) who actually take these algorithms and data
+structures and implement them by writing programs.
+
+
+In nand2tetris,we take both perspectives. In the first half of units,we will talk about theory,
+and in the second half of units, we will talk about actually implementing the ideas we have
+using the Jack language
+
+A lot of beautiful algorithms will be introduced in this module.
+
+
+So far in this course,we didnt worry too much about efficiency, we just wanted things to work
+and we didnt care if they were quick or not.When it comes to developing operating systems,
+efficiency is critically important because the algorithms that we develop are going to serve
+everything on top of these algorithms. So if the algorithms of the OS are not optimized and 
+are not efficient,then all the application programs that run on top of the OS are going to be
+sluggish
+
+For example, if Memory.alloc is not optimized, and lets say compiles to around 2000(arbitary num) 
+assembly commands. If a program calls Memory.alloc 10 times,thats 20000 assembly commands
+
+If Memory.alloc was optimized and compiles to around 500(arbitary num) assembly lines,and the
+program calls Memory.alloc 10 times, thats only 5000 assembly commands, thats 15000 assembly 
+commands less.
+
+So when it comes to OS, we can no longer afford this bliss of ignorance in terms of efficiency
+
+
+Efficiency Matters
+--------------------
+When it comes to operating systems, efficiency really matters.
+Numerous application programs are going to use the std library of its language
+
+The lower theservice at the software hierarchy, the more you want it to be efficient since it 
+is going to support many more services on top of it
+
+
+Let's look at the ways to implement Math.multiply.
+
+Repetetive Addition
+---------------------
+One way to implement it is repetetive addition:
+multiply(x,y):
+    sum = 0
+    for i in range(y):
+        sum = sum + x
+
+    return sum
+
+Sure this implementation works,but what is the running time of this implementation/algorithm?
+
+Well looking at the code, you can see that the running time of the algorithm really depends 
+on "y".  
+
+If "y" is 50, 50 iterations are executed, if "y" is 100, 100 iterations are executed
+So the algorithm will always execute "y" iterations
+
+The larger "y" is, the longer the running time. 
+So the running time is proportional to "y"
+
+If an iteration after compilation is around 100 assembly instructions and takes 10ms to execute
+(the numbers are completely arbitary)
+
+(Ignoring the "sum = 0" and "return sum" instructions)
+If "y" = 5, it takes 5 iteration so 50ms
+So the running time of the algorithm = 10y ms
+
+
+We must always try to give the worst case scenario an algorithm.
+So the worst case scenario of this algorithm is when "y" is the largest possible number the 
+algorithm maybe asked to multiply.
+
+If the largest num = 65535, worst case scenario = 655350ms !
+
+
+This algorithm is not good, are there any other ways to implement Math.multiply?
+
+
+Longform Multiplication
+------------------------
+This algorithm is based on the multiplication we learned in elementary school (longform 
+multiplication)
+
+Example:
+
+   11011  = 27
+    1001  = 9
+---------
+   11011
+  00000
+ 00000
+11011
+---------
+11110011  = 243
+
+
+Let's find a more systematic way to do this.
+
+
+Remember that in multiply(x,y), x and y are just values in memory.
+
+Lets say that x was 27,and y was 9. 
+In the Hack computer, a RAM entry is 16 bits wide (this algorithm also works for any bits wide)
+
+Explaining/Visualizing the algorithm:
+
+x: 0000000000011011
+y: 0000000000001001
+--------------------
+   0000000000011011
+   0000000000110110
+   0000000001101100
+   0000000011011000
+
+Lets take x and write it down,then I shift x one bit to the left, then write it again, then shift
+it again,then write it again and so on and so forth
+
+In this case we do this 4 times because "y" has 4 significant bits "1 0 0 1"
+
+Now lets write "y" vertically, so 
+
+
+x: 0000000000011011
+y: 0000000000001001
+--------------------
+   0000000000011011   1
+   0000000000110110   0
+   0000000001101100   0
+   0000000011011000   1
+
+Then,just add the numbers where the vertical "y" at the same line is "1"
+
+So we add up "11011" and "11011000", and we get 11110011
+
+Now lets actually implement this in pseudo code
+
+// Returns x * y, where x,y >= 0
+multiply(x,y)
+    sum = 0
+    shiftedX = x
+    for i in range(w): # w is the width of a RAM entry, so in Jack it is 16 bit
+        if ((i'th bit of y) == 1):  # for 1101, 0th bit of y is 1,the 1st bit is 0 ...
+            sum = sum + shiftedX
+
+        shiftedX = shiftedX * 2 # this can also be written as shiftedX = shiftedX + shiftedX.
+                                # so no multiplication is needed
+    
+    return sum
+
+
+To shift a value 1 bit to the left, simply multiply it by 2.
+
+29 * 2 = 58
+29 = 11101  58 = 111010
+
+ 11101 = 29
+*   10 = 2
+------
+ 00000
+11101
+------
+111010 = 58
+
+This is the same as when you times 10 in base 10, it will shift it to the left.
+Like 2 * 10 = 20, 30 * 10 = 300
+
+
+Now lets take a look at the running time of the algorithm
+The running time of the algorithm does not actually depend on "y", but depends on "w"!
+
+And "w" is fixed since we work with a fixed RAM entry width which is either 16,32,64 ...
+
+So this constant "w" is going to determine how long this algorithm is going to perform.
+So in the Hack computer,no matter "y" is 1 or "y" is 21500,the compiled code is going to 
+take equally long to execute.
+
+
+Again let's consider the worst case scenario
+If "N" is the largest number that we may be asked to multiply, in 16 bits it is 65535.
+
+w = log(base2) N 
+
+log(base 2) 65335 ≈ 16
+
+This algorithm only involves addition operations and shifts, which are basic ALU operations
+So this algorithm can easily be implemented either in software, or hardware
+
+
+Lets look at the graph comparing logarithmic runtime to linear runtime:
+photos/runningTime.png (c is the time to execute one iteration)
+(when N = 8,we are assuming that it is using a RAM entry that is 4 bits, so w = 4)
+(when N = 16,we are assuming that it is using a RAM entry that is 5 bits, so w = 5 and so on and
+so forth)
+
+
+the linear runtime increases dramatically as the input size increases, but the logarithmic run
+time remains bounded
+
+Another attractive thing about log(base2) N is that if you double the input, log of N increases
+by one only
+
+(Because when a number is multiplied by 2, the width only increases by one) 
+
+log(base2) (2N) = log(base2) N + 1     (can confirm this using law of logarithms) 
+
+So when the input size doubles,the iteration only increases by one
+
+
+So logarithmic run time is incredibly attractive / wanted.
+A practical example of this is in search engines. Search engines use an algorithm called binary
+search,and binary search has a logarithmic run time.Suppose that the internet has 1 billion items,
+and the search engine has to find one item out of it, it will take 300 iterations (according to
+the table in the png file)
+
+Suppose now that tmr, the size of the internet doubles,now it will take 310 iterations. (rmb that
+there is a constant c = 10).
+
+This demonstrates the incredible power of logarithmic run time.
