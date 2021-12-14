@@ -1,0 +1,104 @@
+THE MEMORY CLASS
+------------------
+The Memory class features 4 classical operations:
+-peek   -alloc
+-poke   -deAlloc
+
+They are classical because every operating system out there, implements these operations in one way
+or another
+
+Peek and Poke
+===================================================================================================
+Why do we need peek and poke?
+Well one reason is to access I/O devices. High level programmers can just use stuff like readInt() 
+and printInt(x) to read and write to I/O devices without worrying about anything. Well this is 
+because things like readInt() and printInt(x) are implemented at the OS level.
+
+I/O devices like keyboard and screen use IO mapped memory which are located in the RAM,so in order
+to access the host ram and implement functions like readInt() and printInt(x), we need to be able
+to read from the host RAM and write to the host RAM using Jack. 
+
+So the OS first has to provide / feature some low-level services like peek() and poke() to facilitate
+direct RAM access.
+
+Then based on these low-level services, the OS will be able to provide / feature high-level services 
+like I/O management and memory management.
+
+
+
+Peek is designed to return the value of a given RAM address
+function int peek(int address)
+
+Poke is designed to take a particular address and a 16-bit value, and sets the given RAM address 
+to this value.
+
+function int poke(int address,int value)
+
+
+So if the RAM looks like this:
+...
+19003: 0000000000000111
+...
+
+Memory.peek(19003) will return 7
+and Memory.poke(19003,-1) will make the RAM look like this:
+
+...
+19003: 1111111111111111
+...
+
+
+So how can we actually implement peek and poke?
+The OS is written in Jack, how can we use Jack to access the RAM?
+
+Let's start with a naive solution:
+var Array ram;
+let ram = Array.new(32768);
+
+
+This solution will definetely not work.
+With how arrays are implemented, the compiler will try to allocate the array of size 32678 in 
+the heap using Memory.alloc.
+
+This Memory.alloc call won't work since this size is too big, the size of the heap is less
+than 32678.
+
+(The heap in the host RAM is from address 2048 till address 16384)
+
+
+Now this here is another solution:
+class Memory {
+    ...
+    static array ram;
+    ...
+    function void init() {
+    // Some OS classes have a init function which are used to do all sorts of internal bookkeeping
+    // and other purposes. These init functions are probably called in Sys.init (not sure), and 
+    // Sys.init is called at the start of the computer. 
+
+        let ram = 0;
+        ...
+    }
+
+}
+
+"let ram = 0" is exactly what we want!
+We can use "let ram = 0" because Jack is a very weakly typed language, and the Jack compiler is 
+very forgiving.
+
+Once ram = 0, we can just say "let ram[addr] = val" to set a ram entry
+This works since in the compiler, ram[addr] is going to be compiled to ram+addr,which is 0+addr,
+which is just addr.
+
+(array access is COMPLETELY handled and implemented in the compiler)
+
+So this "let ram = 0", gives me complete control of the host RAM from the symbolic high level 
+language.
+
+(Obviously if the programmer does not know what he or she is doing, they can completely mess up the
+computer since they have complete control over the RAM)
+
+
+Now that we have this complete control over the RAM using this ram array, implementing peek and poke
+becomes a piece of cake
+

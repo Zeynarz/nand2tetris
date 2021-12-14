@@ -1,0 +1,306 @@
+Now let's start talking about the OS classes
+
+THE MATH CLASS
+----------------
+The subroutines in the Math class contains:
+-Math.init()     -Math.min()
+-Math.abs()      -Math.max()
+-Math.multiply() -Math.sqrt()
+-Math.divide()
+
+We already discussed about multiplication algorithms previously and found an algorithm that
+has logarithmic runtime which depended on the number of digits of the input.
+
+Now,let's discuss about other subroutines in the Math class. We'll start with Math.divide()
+
+
+Division
+==============================================================================================
+We are going to take a look at three algorithms:
+-repetetive subtraction
+-long division
+-dividing by 2
+
+
+Repetetive subtraction
+==============================================================================================
+We're going to count how many times we can subtract y from x until we get a remainder that is 
+less than y.
+
+For example, what is 20 / 6?
+Well we subtract 6 from 20, so we get 14, so we subtracted it once
+Then we subtract 6 from 14, so we get 8,  so we subtracted it twice
+Then we subtract 6 from 8 , so we get 2,  so we subtracted it thrice.
+Now 2 is less than 6. So we stop. So the answer of 20 / 6 is 3 with a remainder of 2.
+
+Pseudocode:
+// x >= 0 and y > 0
+divide(x,y):
+    div = 0
+    rem = x
+    while rem <= x: // This is the pseudocode that the instructors gave, shouldn't this line be
+                    // while rem >= y? Idk,Im not sure
+        rem -= y
+        div += 1
+
+    return div
+
+
+This algorithm's runtime really depends on "x" (and "y"). If "x" is a really big number (and "y" is 
+a rly small number), it would require a lot of iterations and take a really long time to compute
+the result.
+
+The runtime is also very unpredictable, is some inputs, we will get the answer right away,and in
+certain inputs, it would take tons and tons of iterations.
+
+The iterations taken is actually the same as the ans of the division. So like 25 / 5 = 5.
+To compute 25 / 5, it would take this algorithm 5 iterations.
+
+Let's take a look at another algorithm which is based on long division
+
+
+Long division
+==============================================================================================
+   5 8
+--------
+ 1 7 5 | 3
+ 1 5 0
+-------
+   2 5
+   2 4
+   ---
+     1
+
+How to do long division and a quick explanation of long division:
+
+What is the largest number x = (90,80,70,60,50,40,...), so that 3*x <= 175?
+(x is 2 digits wide)
+
+Well it is 50, 50*3 = 150 and 150 <= 175
+
+What we have done here is accelerated subtraction, we have managed to subtract 3 from 175, 50 times.
+
+Well after subtract 150 from 175, there is still a remainder of 25. So,
+
+What is the largest number x = (9,8,7,6,5,4,...), so that 3*x <= 25?
+(x is 1 digit wide)
+
+Well it is 8, 8 * 3 = 24, 24 <= 25
+
+So we subtracted 3, 50 times before, now we subtracted 3 another 8 times,and now we have a remainder
+of 1.
+
+And 1 is less than 3, so we're done. So the answer is 58 with a remainder of 1
+
+So we got the answer actually quite fast. 
+
+
+The algorithm's runtime actually depends on the number of digits of the input
+Look at the example above,since it is 3 digits wide, we first find the largest number x that 
+is 2 digits wide first, then we find the largest number x that is 1 digit wide. So 2 iterations
+
+If the input was 4 digit wide, we would first find the largest number x that is 3 digit wide,then
+2 digit,then 1 digit, so 3 iterations.
+
+So the runtime is log(base 10) N if we divide decimal numbers, and log(base 2) N if we divide 
+binary numbers. (the width of the value - 1) 
+
+
+
+So the running time of repetetive subtraction depends on the input's size, and the running
+time of long division depends on the number of digits.
+
+If we have to compute something like 7234723472348493849234049348 / 3
+
+Repetetive subtraction will take around 2.4115744907828314e+27 iterations, where as long
+division will take around 27 iterations.
+
+
+Now we'll discuss about another efficient division algorithm,and is actually the algorithm we
+are going to use in our own Jack OS.
+
+
+Divide by two algorithm
+==============================================================================================
+This algorithm is a recursive algorithm.
+
+Pseudo code:
+// where x >= 0 and y > 0
+divide(x,y):
+    if (y > x) return 0
+    q = divide(x,2 * y)
+    if ((x - 2 * q * y) < y):
+        return 2 * q
+    
+    else:
+        return 2 * q + 1
+
+How this algorithm works is based on the following:
+Suppose we want to divide 100 / 7, well I know that the answer is twice as much as 50 / 7
+
+(50)(2)       50
+-------- = 2( -- )
+   7           7
+
+So what is 50 / 7? Well I know that 50 / 7 = 2 (25/7) and so on and so forth
+
+
+If we use the pseudo code to try and compute 100 / 7:
+    The values of the variables at every divide() call:
+    call    x   y   q
+     1     100  7   7
+     2     100  14  3
+     3     100  28  1
+     4     100  56  0
+     5     100 112  None
+
+     and we would get the answer 14,which is correct
+
+
+It turns out that the running time of this recursive algorithm is log(base 2) N, which is great.
+
+The beauty of this algorithm is that it involves only addition and subtraction operations,therefore
+versions of this algorithm can be implemented very efficiently in either software or hardware.
+
+
+And thats it for division !
+
+
+Square root
+==============================================================================================
+The square root function √x has two appealing properties:
+- its inverse function (x^2) can be easily computed, just times x by itself
+- it is a monotonically increasing function 
+  (monotonically increasing means that it is always increasing or remaining constant,never decreasing)
+
+Therefore, square roots can be computed using binary search. The running time of binary search is
+logarithmic which is what we want.
+
+Pseudo code:
+// find an integer y such that y^2 <= x <= (y+1)^2  (for 0 <= x <= 2^n)
+sqrt(x):
+    y = 0
+    for j = n/2 - 1 ... 0:
+        if (y + 2^j)^2 <= x then y = y + 2^j
+
+    return y
+
+So that is how we're going to implement square roots
+
+So we have talked about multiply,divide and sqrt of the Math class,the remaining subroutines of the 
+Math class are trivial,so we don't really have to discuss them
+
+
+Math class implementation notes
+==============================================================================================
+So there are still a few issues we have to discuss.
+
+Let's take a look at our multiplication algorithm
+
+multiply(x,y) 
+    sum = 0  
+    shiftedX = x 
+    for i in range(w): 
+        if ((i'th bit of y) == 1):   
+            sum = sum + shiftedX
+        shiftedX = shiftedX * 2  
+
+    return sum
+
+Issues:
+- how to handle negative numbers?
+- how to handle overflow?
+- how to implement (i'th bit of y) quickly?
+
+Quick reminder: negative numbers have the most significant bit set as 1
+                positive numbers have the mos significant bit set as 0 (except for the number 0)
+
+Handling negative numbers:
+    Well it turns out that if the inputs are two's complement values, the algorithm will work fine
+    as is. So no changes need to be made for this part.
+
+    Example:
+
+Handling overflow:
+    The two vars that could get overflowed is sum and shiftedX.
+    Well it turns out once again that the algorithm always returns the correct answer modulo 2^16
+
+    So the algorithm may not give you ALL the digits of the correct answer,but the digits the
+    algorithm will give WILL be the right ones
+
+Implementing (i'th bit of y):
+    How can we extract a certain bit from "y"? Well we could make a boolean function called bit 
+    to do this extraction.
+
+    // Returns true if the i-hth bit of x is 1, false otherwise
+    function boolean bit(int x, int i)
+
+    The bit(x,i) function can normally be implemented very efficiently using bit shifting operations,
+    but Jack does not feature bit wise operations,so we need a work around.
+    
+
+    We can create a static array right when we start the computer by Math.init.
+    (Math.init() is prob called by Sys.init(), I'm not sure)
+
+    This array will be 16 elements long,one element for one bit
+
+    When you have this array,the bit function can represent the binary form of "x" using the array
+    and use "i" as the index to access the array
+
+
+    (We build this array only once,when we start the computer,and we just keep reusing this same 
+    array. This is actually quite typical to operating systems,when they start running,there is an
+    init stage which the operating system builds all sorts of data structures which it is going to 
+    use throughout its execution)
+
+
+Now let's discuss some stuff about the division algorithm
+
+divide(x,y):
+    if (y > x) return 0
+    q = divide(x,2*y)
+    if ((x - 2 * q * y) < y):
+        return 2 * q
+
+    else:
+        return 2 * q + 1
+
+
+Issues:
+
+Handling negative numbers:
+    What should the algorithm do if it is asked to divide stuff like 151 by -17. 
+    Well unlike the multiplication algorithm, we have to make minor changes.
+
+    We can just divide |x| by |y|, then set the result's sign after,like if 151 / -17, we first
+    get the result of 151/17, then set it to be negative.
+
+Handling overflow:
+    The variable y can very certainly overflow easily since we keep multiplying it by 2 and 
+    sometimes add it by 1.
+
+    In general,when you have a two complements number which is positive and keeps growing,when
+    it becomes negative, that is the point when it overflows.
+
+    The overflow can be detected when y becomes negative. (Rmb that negative numbers have the
+    MSB as 1)
+
+
+Now let's discuss about the square root algorithm.
+
+sqrt(x):
+    y = 0
+    for j = n/2 - 1 ... 0:
+        if (y + 2^j)^2 <= x then y = y + 2^j
+
+    return y
+
+The calculation of (y+2^j)^2 can very certainly overflow,so we can also use the method above and 
+detect if the calculation becomes negative by changing the condition
+
+(y+2^j)^2 
+to 
+(y+2^j)^2 and (y+2^j)^2 > 0
+
+
+And that's it for the Math class!

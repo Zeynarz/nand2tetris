@@ -1,5 +1,5 @@
 OPERATING SYSTEM
-=================================================================================================
+-----------------
 An operating system is just something that provides services
 
 The goal of the operating system is to close many gaps that exists between high level programming
@@ -17,7 +17,7 @@ provides tons of system oriented services.
 
 
 Typical OS Services
-----------------------
+=================================================================================================
 So a typical OS can be viewed as / provides:
 -a standard library
 -system oriented services
@@ -83,7 +83,7 @@ system oriented services part.
 
 
 The Jack OS
---------------
+=================================================================================================
 The Jack OS is the OS we are going to build in nand2tetris
 
 The Jack OS consists of 8 classes:
@@ -138,7 +138,7 @@ So when it comes to OS, we can no longer afford this bliss of ignorance in terms
 
 
 Efficiency Matters
---------------------
+=================================================================================================
 When it comes to operating systems, efficiency really matters.
 Numerous application programs are going to use the std library of its language
 
@@ -149,7 +149,7 @@ is going to support many more services on top of it
 Let's look at the ways to implement Math.multiply.
 
 Repetetive Addition
----------------------
+=================================================================================================
 One way to implement it is repetetive addition:
 multiply(x,y):
     sum = 0
@@ -188,7 +188,7 @@ This algorithm is not good, are there any other ways to implement Math.multiply?
 
 
 Longform Multiplication
-------------------------
+=================================================================================================
 This algorithm is based on the multiplication we learned in elementary school (longform 
 multiplication)
 
@@ -211,7 +211,6 @@ Let's find a more systematic way to do this.
 Remember that in multiply(x,y), x and y are just values in memory.
 
 Lets say that x was 27,and y was 9. 
-In the Hack computer, a RAM entry is 16 bits wide (this algorithm also works for any bits wide)
 
 Explaining/Visualizing the algorithm:
 
@@ -249,7 +248,8 @@ Now lets actually implement this in pseudo code
 multiply(x,y)
     sum = 0
     shiftedX = x
-    for i in range(w): # w is the width of a RAM entry, so in Jack it is 16 bit
+    for i in range(w): # w is the width of "y", so if this was applied to the above example
+                         w would be 4
         if ((i'th bit of y) == 1):  # for 1101, 0th bit of y is 1,the 1st bit is 0 ...
             sum = sum + shiftedX
 
@@ -277,40 +277,60 @@ Like 2 * 10 = 20, 30 * 10 = 300
 
 
 Now lets take a look at the running time of the algorithm
-The running time of the algorithm does not actually depend on "y", but depends on "w"!
+The running time of the algorithm does not actually depend on "y", but depends on "w",so the
+width of "y"
 
-And "w" is fixed since we work with a fixed RAM entry width which is either 16,32,64 ...
+When "w" is 3,it will take 3 iterations, when "w" is 5, it will take 5 iterations.
+So the algorithm will always execute "w" iterations
 
-So this constant "w" is going to determine how long this algorithm is going to perform.
-So in the Hack computer,no matter "y" is 1 or "y" is 21500,the compiled code is going to 
-take equally long to execute.
+To find the "w" of a value, we can actually just:
+w = floor(log(base 2) y) + 1
+
+For example, 9 in binary is "1001", so the "w" is 4
+log(base 2) 9 = 3.1699 ≈ 3 + 1 = 4 
+
+This works because 9 is bigger than 2^3 which is 8, but smaller than 2^4, which is 16,
+So 9 is somewhere in between power 3 and power 4. So the log(base 2) of 9 is 3.???
+
+We also have to plus 1 because binary numbers have a power 0 as the first bit
+
+Remember that binary works like this:
+
+binary    1 1 1 1 1
+power     4 3 2 1 0
 
 
-Again let's consider the worst case scenario
-If "N" is the largest number that we may be asked to multiply, in 16 bits it is 65535.
+So log(base 2) 8 = 3
 
-w = log(base2) N 
+It means that  2^3 = 8, that means that the binary form of 8 contains 3,2,1,0. So "w" is 4.
+(Can't forget about the power 0)
 
-log(base 2) 65335 ≈ 16
-
-This algorithm only involves addition operations and shifts, which are basic ALU operations
-So this algorithm can easily be implemented either in software, or hardware
+This works also for base 10 numbers like 1337, the concept is the same as base 2.
+log(base 10) 1337 = 3.1261314 + 1 ≈ 4  (which is the width of 1337)
 
 
-Lets look at the graph comparing logarithmic runtime to linear runtime:
-photos/runningTime.png (c is the time to execute one iteration)
-(when N = 8,we are assuming that it is using a RAM entry that is 4 bits, so w = 4)
-(when N = 16,we are assuming that it is using a RAM entry that is 5 bits, so w = 5 and so on and
-so forth)
 
+So let's say that N is an input value,you can say that the running time of the algorithm is:
+log(base 2) N
+
+This is a logarithmic runtime, which is what we want the most in algorithms!
+
+(This algorithm only involves addition operations and shifts, which are basic ALU operations
+So this algorithm can easily be implemented either in software, or hardware)
+
+To demonstrate the power of logarithmic runtime,lets look at the graph comparing logarithmic 
+runtime to linear runtime: photos/runningTime.png 
+(c is the time to execute one iteration)
 
 the linear runtime increases dramatically as the input size increases, but the logarithmic run
-time remains bounded
+time remains bounded!
+
 
 Another attractive thing about log(base2) N is that if you double the input, log of N increases
 by one only
 
-(Because when a number is multiplied by 2, the width only increases by one) 
+(Because when multiplying a number by 2 is equals to shifting it to the left by one bit,this
+is talked about above) 
 
 log(base2) (2N) = log(base2) N + 1     (can confirm this using law of logarithms) 
 
