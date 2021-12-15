@@ -25,7 +25,6 @@ Then based on these low-level services, the OS will be able to provide / feature
 like I/O management and memory management.
 
 
-
 Peek is designed to return the value of a given RAM address
 function int peek(int address)
 
@@ -102,3 +101,312 @@ computer since they have complete control over the RAM)
 Now that we have this complete control over the RAM using this ram array, implementing peek and poke
 becomes a piece of cake
 
+
+Alloc and Dealloc (Heap management)
+===================================================================================================
+Why do we need alloc and dealloc?
+Well high level programs typically create many objects and arrays, and we need some place in 
+memory to store these objects and arrays, so we store them in a memory segment called the heap.
+
+
+So we need to manage this memory resource which we call the heap efficiently. We need to be able
+to allocate memory from the heap whenever needed, and we also have to recycle memory of objects
+and arrays that are no longer needed
+
+Memory.alloc will get the size of the memory block that it has to allocate as an argument,and then
+it finds a block of memory in the heap that is of the required size, and returns the address to
+the caller.
+
+function int alloc(int size)
+
+
+Memory.deAlloc will get the address of a certain object / array, and then recycles the RAM space 
+that was allocated to this object / array. This recycled RAM space can be used again, by other
+objects / arrays.
+
+function void deAlloc(int object)
+
+
+A side note about garbage collectors:
+    In Jack, it is recommended for high level programmers to have a dispose() function to remove 
+    and deAlloc objects that are not used anymore. Jack programmers have to dispose these objects
+    and call Memory.deAlloc themselves whereas Java and C# programmers dont have to do these things.
+    
+    That's because languages like Java and C# have something called a garbage collector, which
+    is a process which runs in the background and do these things automatically. So how does
+    the garbage collector actually does this?
+
+    Well the garbage collector keeps track of every pointer that are pointing to every object.
+    When an object has no pointer pointing to it, the garbage collector will kick in and call
+    deAlloc implicitly.
+
+
+Now let's finally discuss about implementing alloc and deAlloc.
+
+
+Simple solution
+===================================================================================================
+Let's start with a simple and naive approach / solution to heap management.
+
+init:
+    // This variable free serves as the base address of all the memory which is freely 
+    // available for new objects.
+
+    free = heapBase
+    
+    // free is heapBase, so the whole heap is available for allocation
+
+alloc(size):
+    // Everything below free is available for allocation, so we just return the current free,then
+    // we update free so it points to available memory again.
+
+    base = free
+    free = free + size
+
+    return base
+
+deAlloc(object):
+    do nothing to keep this solution simple
+
+
+So with this solution,
+
+Before alloc(3):                                            After alloc(3):
+                 --------                                               --------
+free heapBase -> |...   |                                   heapBase -> |      |
+                 |      |                                               |      |
+                 |      |                                               |      |
+                 |      |                                   free     -> |      |
+                 |      |                                               |      |
+                 |      |                                               |      |
+                 --------                                               --------
+
+So this solution will work for a while, until we inevitably run out of memory.
+We will run out of memory since we didn't recycle any memory and reuse any memory, so once a 
+memory block was allocated, it will be forever allocated, never freed again
+
+So we'll need a better solution
+
+The better solution
+===================================================================================================
+Let's use a linked list to keep track of available and free heap segments. 
+(Just like free() in linux)
+
+During runtime, after the program has created and freed a couple objects and arrays, the linked list
+will look something like this: photos/freeList.png
+
+So freeList points to a free chunk,and the free chunk points to another free chunk and so on and
+so forth
+
+(The wilderness is also in the freeList)
+
+Every element in this freeList, has the following structure:
+
+        ---------
+next -> |       | <---| metadata / overhead
+size -> | 7     | <---|
+        |       | <------
+        |       |       |
+        |       |       |     RAM area
+        |       |       |---- available 
+        |       |       |     for allocation
+        |       |       |
+        |       | <------
+        ---------
+
+Now, with this new linked list, let's reimplement alloc.
+
+Simply explained,
+
+alloc(size):
+    find a block of the required size in the linked list, remove the block from the linked list
+    and give the address of the block to the caller
+
+dealloc(object):
+    append the object/block to the freeList
+
+
+A more detailed explanation,
+
+alloc(size):
+    // segment.size is the size metadata of the free chunk/segment. So segment.size is the 
+    // size of the RAM area available for allocation, the size of the metadata is not included
+
+    // So for example in the diagram above describing the structure of elements in the freeList,
+    // segment.size is 7
+    
+ 
+    Criteria of a possible segment: if segment.size >= size + 2:
+                                        the segment is possible for allocation
+
+
+    // So if alloc(3) is called, and the freeList is the same as the freeList in freeList.png
+    // the first segment is not possible, since segment.size is 4, and we need size 5 (3+2)
+    // (The + 2 is for the overhead fields / metadata if the new memory block)
+    
+    // However the last two segments are possible, since the segment.size meets the criteria   
+    
+
+    search the freeList for:
+        - the first possible segment (first fit)
+        - the smallest possiblee segment (best fit)
+
+    // first fit and best fit are two different algorithms
+    // again if alloc(3) is called and freeList = freeList.png. First fit will return the 
+    // chunk / segment that has segment.size 7, and best fit will return the chunk / segment
+    // that has segment.size 5
+
+    // first fit returns a chunk as quickly as possible, while best fit manages the linked list 
+    // better. It is up to you to implement either first fit or best fit, both works.
+
+    
+    carve a block that is size+2 large from the segment selected
+    return the base address of the block
+
+    // Let's say that we are using the first fit algorithm
+    // Well we would have found the segment with segment.size 7.
+
+    // Before allocation:                   After allocation:
+       --------                            --------
+       |..    |                            |..    | <- this block is still free  
+       | 7    |                            |2     |
+       |      |                            |      |
+       |      |                            |      |
+       |      |                            --------
+       |      |                            
+       |      |                            --------
+       |      |                            |0     | <- this block will be handed to the
+       |      |                            |3     |    caller
+       --------                            |      |
+                                           |      |
+                                           |      |
+                                           --------
+
+
+deAlloc(object):
+    append the object to the end of the freeList 
+    (Set the last free chunk's "next" field to point to object-2, need to minus 2 from object,
+     so that the "next" field points to the metadata of object)
+
+Using this algorithm, after a few alloc and deAllocs, the ram would look something like this
+: photos/ram.png
+
+Fragmentation and defragmentation
+===================================================================================================
+Now notice that the more we recycle chunks, the more we use deAlloc, the more the heap becomes
+fragmented,it will contain many segments which are small
+
+Examle of fragmented heap:
+        ---------
+7000    | 7007  | -------
+7001    | 5     |       |
+7002    |...    |       |
+...     |...    |       |
+7006    |...    |       |
+7007    | 7016  | <-----     -----
+7008    | 7     |                |
+7009    |...    |                |
+...     |...    |                |
+7015    |...    |                |
+7016    | 7158  | <---------------     ------
+7017    | 3     |                           |
+7018    |...    |                           |
+7019    |...    |                           v
+7020    |...    |                         .....
+        ---------                   
+
+
+Let's say that alloc(12) is called. Even though there are so many free chunks on the heap,
+side by side,none of them are big enough to fit 12+2. 
+
+If the 3 free chunks which are side by side would merge, it would create a chunk large enough
+to fit 12+2.
+
+This merging of free chunks is called defragmentation.
+
+After defrag: 
+        ---------
+7000    | 7021  | -------
+7001    | 19    |       |
+7002    |...    |       |
+....    |...    |       |
+7020    |...    |       |
+7021    |.(next)| <------                       
+7022    |.(size)|
+7023    |...    |
+        ---------
+
+After defrag, the 3 small chunks merge together and creates a big chunk. This allows bigger 
+blocks to be allocated from this chunk,allows us to recycle and reuse more memory,and allows
+the heap to be much more efficient and clean.
+
+That's why in many operating systems, defrag kicks in every once in a while and tries to
+merge as many small segments as it can to become big and continuos segments.
+
+(defrag is not required to be implemented in the Jack OS. If you want to implement it tho,no
+problem)
+
+
+Implementation notes
+===================================================================================================
+
+Implementing heap management:
+class Memory {
+    ...
+    static Array heap;
+    ...
+
+    function void init(){
+        ...
+        let heap = 2048 // heapBase
+        // In the Hack computer, it is decided that heap starts at address 2048
+
+        let freeList = 2048
+        // The whole heap is free.
+
+        let heap[0] = 0; // next
+        let heap[1] = 14355; // set the metadata of the free heap / wilderness / topmost chunk
+        // freeList contains one segment only, and that is the wilderness.
+        // The segment.size is the size of the entire heap - 2 (-2 cause metadata)
+    }
+}
+
+To access the "next" and "size" properties of a memory block, simply access addr-1 and addr-2
+
+Once we have this "heap" array,we can implement alloc,deAlloc and even deFrag with this array.
+
+Notice that although heap is an array, we didn't call Array.new, instead we just set heap to 2048,
+just like how we did it when implementing peek and poke,since Jack is weakly typed.
+
+
+(If we DID call Array.new in Memory.init, Array.new will call Memory.alloc, and since Memory.init
+isn't setup yet, Memory.alloc won't work and so on and so forth. Fun thing to think about.)
+
+
+The final pseudo code:
+
+init:
+    freeList = heapBase
+    freeList.size = heapSize
+    freeList.next = 0
+
+alloc(size):
+    search freeList using best-fit or first-fit:
+        to obtain a segment with segment.size >= size + 2
+
+    if no such segment is found, return failure
+        (or attempt defragmentation)
+
+    block = base address of the found space
+
+    update the freeList and the fields of block
+        to account for the allocation
+
+    return block
+
+deAlloc(object):
+    append object to the end of the freeList
+
+(might also need to check if size = 0 in alloc)
+
+And that's it for the Memory class.
