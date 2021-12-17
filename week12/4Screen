@@ -1,0 +1,441 @@
+THE SCREEN CLASS
+-------------------
+The Screen class contains the following subroutines:
+-clearScreen    -drawLine
+-setColor       -drawRectangle
+-drawPixel      -drawCircle
+
+
+Let us begin with a little discussion about graphics
+
+
+Look at the photo: photos/smallDuck.png
+It's just a photo of two identical ducks. Now let's zoom in on these two ducks 
+
+Zoom in(ed): photos/bigDuck.png
+Now there is a huge difference between the two ducks.
+
+The image on the right scales not nicely,whereas the image on the left scales up perfectly.
+So in a small screen,the two images don't really have a difference,but if they were presented
+in a large screen, the differences start showing.
+
+This is because the two images are stored / managed using two different techniques.
+The image on the left is using vector graphics, and the image on the right is using bitmap 
+graphics (Why bitmap scaling is so bad will be discussed later)
+
+
+Bitmap graphics
+=================================================================================================
+Let's say that you want to draw a cup and you decided to draw it using bitmap graphics:
+photos/cupBitmap.png
+
+In Jack, we can draw this cup just by turning on and off pixels.
+
+Here is the bitmap file that is going to draw this image:
+0001111111100000
+0001111110010000
+0001111110010000
+0001111111100000
+0001111110000000
+0001111110000000
+...
+
+Bit 1 means black (turn on), bit 0 means white (turn off)
+
+If I have an image that has a million bits, then I will have several thousands of these lines in 
+the bitmap file
+
+
+Vector graphics
+=================================================================================================
+Now, let's draw the same image using vector graphics.
+
+Vector graphics file:
+drawLine(3,0,11,0);
+drawRectangle(3,1,9,5);
+drawLine(12,1,12,2);
+drawLine(10,3,11,3);
+drawLine(4,6,8,6);
+drawLine(0,7,12,7);
+drawLine(1,8,11,8)
+
+Instead of specifiying where every bit should go,vector graphics records a set of instructions 
+that specifies how to draw the figure.
+
+
+Vector vs Bitmap
+=================================================================================================
+There are a ton of advantages to vector graphics.
+1.) Vector graphics scales much more better than bitmap graphics.
+    
+    For bitmaps, all you have are bits of information. You can try using all sorts of algorithms
+    that compute pixel averages to scale up the image and so on, but the result will still be 
+    bad.
+
+    For example,
+    if you try to draw the bitmap :
+    0001111111100000
+    0001111110010000
+    0001111110010000
+    0001111111100000
+    0001111110000000
+    0001111110000000
+    ... till 16 lines
+
+    larger, so try to draw the bit map with 32*32 pixels.
+
+    00000011111111111111110000000000
+    00000011111111111111110000000000
+    00000011111111111100001100000000
+    00000011111111111100001100000000
+    00000011111111111100001100000000
+    00000011111111111100001100000000
+    00000011111111111111110000000000
+    00000011111111111111110000000000
+    00000011111111111100000000000000
+    00000011111111111100000000000000
+    ... till 32 lines
+    
+    You will have to make the cup wider, and longer. 
+    How can you do that with just the 16*16 bitmap?
+    
+    You can try to do it using algorithms etc,but still at the end it is unpleasent to the
+    human eye.
+
+    For vector graphics,you have perfect scaling. If you want to draw the cup bigger, you can 
+    just manipulate the numbers of drawLine(),drawRectangle etc, and you will get a perfect 
+    figure drawn.
+
+    For example,
+    You can just increase the "11" in drawLine(3,0,11,0) so that it draws a longer line,and 
+    you can just increase certain numbers in drawRectangle(3,1,9,5) so that it draws a 
+    bigger rectangle.
+
+2.) Vector graphics contains relatively little information. Instead of recording every pixel,
+    you just have to record instructions,so it doesn't take a lot of space on the hard disk.
+
+    For example this:
+    0001111111100000
+    0001111110010000
+    0001111110010000
+    0001111111100000
+    0001111110000000
+    0001111110000000
+    ... till 16 lines
+
+    of course contains more information than:
+
+    drawLine(3,0,11,0);
+    drawRectangle(3,1,9,5);
+    drawLine(12,1,12,2);
+    drawLine(10,3,11,3);
+    drawLine(4,6,8,6);
+    drawLine(0,7,12,7);
+    drawLine(1,8,11,8)
+    
+    Besides that, if you have a 32*32 bitmap, the bitmap file is going to get much bigger,wheras
+    the vector file is just going to contain maybe a few more lines of instructions
+    
+    And since vector graphics files are so small, they can be easily transmitted and downloaded
+    over the internet.
+
+3.) If you like bitmap, vector graphics can always be turned into bitmap. 
+
+
+drawPixle,drawLine,drawCircle
+=================================================================================================
+The function drawPixel() is needed both in vector graphics and in bitmap graphics. So drawPixel
+is the most fundamental graphics operation.
+
+Vector graphics primitives include:
+-drawLine
+-drawCircle
+
+
+Pixel Drawing
+=================================================================================================
+Remember that the screen will refresh several times a second and read from the screen memory map 
+on the host RAM, and turn pixels on and off the screen based on the memory map.
+
+If a high level programmer wanted to draw a pixel on let's say x = 450,y = 200, he/she can just
+write:
+
+do Screen.drawPixel(450,200);
+
+So how can you implement this drawPixel?
+
+function void drawPixel(int x,int y){
+    address = 32*y + x/16
+    value = Memory.peek(16384+address) // base address of the memory map is 16384
+    set the (x % 16)th bit of value to the current color
+    do Memory.poke(address,value)
+}
+
+When drawPixel is asked to draw pixel 450,200. It will figure out that the word it has to 
+manipulate is word 22812, and it also know that it has to manipulate the 3rd bit of the word.
+(0th bit is LSB,rightmost bit)
+
+drawPixel will figure out which word to manipulate using the formula addr = 32y + x/16. The 
+screen is 512 pixels wide and 256 pixels long, so a full row is represented by 512/16=32
+words. So if you want to manipulate a pixel on the 1st row(y = 1),you have to add 32 words to 
+figure out the final address of the pixel you want ot manipulate.
+
+(When addr = 0,it is the first 16 bits of the first row,when addr = 32,it is the first 16 bits of
+the second row, when addr=64 ...)
+
+One word is 16bit,so to manipulate x=82, 82 // 16 = 5, so you know you have to manipulate
+the 5th word of that row.If you want to manipulate x=0, 0 // 16 = 0,you know tht you have 
+to manipulate the 0th word of that row.
+
+
+To figure out which bit, simply x % 16. When x = 3, 3 % 16 = 3,so you know you have to manipulate
+the 3rd bit of the word selected. When x = 16,x % 16 = 0,so you know you have to manipulate the 0th 
+bit of the word selected
+
+
+You may ask,why do you have to retrieve a whole word and change it, can't you just change one bit?
+Well you can't manipulate bits directly,since Hack is 16-bit,you must operate in chunks of 16bits
+in the RAM. 
+
+
+Line drawing
+=================================================================================================
+Take a look at this drawing of a beak: beak.png 
+You can see that the beak is draw using several straight lines
+
+Images are drawn on the screen through a sequence of drawLine operations,drawing a more complex 
+image will need more drawLine calls.
+
+As OS developers, we have to implement drawLine efficiently. If line drawing is slow,it will take 
+a long time to draw any image,it will take an even longer time to draw a complex image, and 
+everything will look sluggish.
+
+
+Let's start discussing about actually drawing lines.
+
+drawLine(x1,y1,x2,y2) (Let us focus on lines that go north-east)
+Let's say that you want to draw a diagonal line, a line that goes north-east:
+notDrawnLine.png
+
+Notice that it's kind of impossible to draw the line you see in the image,but we can try to
+approximate the line so that,if the resolution of the screen is sufficiently large, and the pixels
+are sufficiently small,it will look like an actual smooth straight line
+
+
+The line drawn: drawnLine.png 
+(So if you use draw an approximated "line" like this,when the "line" is zoomed out,the approximated
+"line" looks like an ACTUAL smooth straight line)
+
+Notice that all the black points is connected either horizontally, or vertically.
+   _ _
+ _|_|_|
+|_|_|
+
+This is because if two black points are ONLY connected diagonally,you will eventually create 
+something that looks like a hole in the middle of the line (when zoomed out(?)).
+
+     _
+   _|_|
+ _|_|
+|_|
+
+
+
+Now let's start to implement drawLine.
+drawLine is just implemented through a sequence of drawPixel operations. After we draw a pixel,
+we have to decide to go right or up, to draw the other pixel.
+
+This decision to go right or up, holds the key to the speed of this entire algorithm, so how
+can we make these decisions fast?
+
+Some convenient notation: notation.png
+
+pseudo code:
+a=0; b=0;
+// a is how many pixels I went right
+// b is how many pixels I went up
+
+while ((a <= dx) and (b <= dy))
+    drawPixel(x+a,y+b);
+
+    //decide if go right or up
+    if going right, {a = a + 1}
+    else            {b = b + 1}
+
+
+There is always a pixel drawn at the beginning of the loop.
+So if you want to go right and draw a pixel on the right, simply change a, same concept applies if
+you want to go up.
+
+In each iteration,the algorithm either increment a or b, it never increments both, since we decided
+not to go diagonally.
+
+When a is less than dx,and b is less than dy,you know that you haven't reach your target yet,
+and still have work to do.
+
+
+So how can we know if we should go right or up?
+Well what you can do is by comparing gradients.
+
+The desired gradient is dy/dx, and the gradient of your current line is b/a
+If b/a is greater than dy/dx, (photos/greaterM.png),you want to go to the right, so that a is 
+bigger, and b/a the gradient is smaller.
+
+Else, (b/a is smaller than dy/dx),you want to go up,so that b is larger, and b/a the gradient is
+larger
+
+So the pseudo code should now look like this:
+
+if (b/a > dy/dx) {a = a+1;}
+else             {b = b+1;}
+
+Although it looks like we're done here, but remember that line drawing should be as fast as it
+can.
+
+There is a very expensive expression in this algorithm and that is the expression "b/a > dy/dx".
+This expression is evaluated every iteration of the while loop, everytime the loop draws a pixel,
+this expression is evaluated.
+
+This expression is expensive because it involves two divisions,which are expensive operations.
+
+So now let's see what we can do about this expression.
+Well b/a > dy/dx is the same as a*dy < b*dx
+
+Let's now look at "let diff = a*dy - b*dx". We know that a*dy < b*dx is true when diff < 0.
+So now b/a > dy/dx can be replaced with diff < 0, but of course we need to maintain diff.
+since diff changes every iteration (since a and b changes every iteration).
+
+Whenever a or b changes,we have to change diff as well. So what is the impact on diff,when 
+a or b increments.
+
+Looking at "let diff = a*dy - b*dx",you can see that when a++, diff goes up by dy.
+
+For example dy = 2,and b*dx = 10,
+
+a = 1, diff = -8
+a = 2, diff = -6
+a = 3, diff = -4
+a = 4, diff = diff + dy
+
+a++,diff += dy
+
+When b++, diff also goes down by dx.
+
+If dx = 3,a*dy = 15,
+
+b = 1, diff = 12
+b = 2, diff = 9
+b = 3, diff = 6
+b = 4, diff = diff - dx
+
+b++,b+= dx
+
+With that in mind, the final pseudo code should look something like this:
+
+a=0; b=0; diff = 0
+// a is how many pixels I went right
+// b is how many pixels I went up
+
+while ((a <= dx) and (b <= dy))
+    drawPixel(x+a,y+b);
+
+    //decide if go right or up
+    if (diff < 0),  {a = a + 1;diff = diff + dy;}
+    else            {b = b + 1;diff = diff - dx;}
+
+
+This algorithm now involves only addition and subtraction, versions of this algorithm can now
+be implemented highly efficiently in either software or hardware.
+
+This algorithm is also as good as it gets,you cannot improve it further.
+
+
+Circle drawing
+=================================================================================================
+Now that we know how to draw lines, we can draw a circle by drawing lines.
+
+Well like drawing lines, it is not possible to actually draw a perfect circle using pixels,but
+we can approximate the circles using line drawing. If the pixels are small enough, this approximated
+circle will look like a smooth perfect circle
+
+To draw a filled circle, we can draw it line by line like this: photos/circle.png
+to create the illusion of a filled circle.
+
+drawCircle(x,y,r);
+Well how can we draw these rows of pixels,how can we draw a circle that has a center (x,y) with
+radius r.
+
+In total, we will have to draw 2r(diameter)(+1?) rows. If r = 3,it means that 6(7?) rows are going
+to be drawn. Let's characterized these rows by the distance of these rows from the origin.(Just
+like in circle.png) So in the middle of the circle,the row is characterized with dy = 0,
+and as you go up, dy goes down (since 0,0 is on the top left) until dy = -r, and as you go down, 
+dy goes up until dy = r.
+
+
+In circle.png, there is a pixel that is red. Let's try to find the coordinate of that pixel.
+If we know the coordinate of this pixel,we can find the coordinate of the symmetrical pixel,
+the pixel on the other side,and we can call drawLine on both of these pixels. (This will be 
+demonstrated later)
+
+Well, I don't know what the x coordinate is,but I do know that the y coordinate is (origin y)+dy/
+The symmetric pixel (pixel on the other side) also has the same y coordinate.
+
+So red pixel = (x1,y+dy)    Symmetrical pixel = (x2,y+dy)
+
+How can we find x1 and x2?
+Well we can draw these lines here: circleWLines.png
+Since we know the value of dy and r, we can actually use pythagoras theorem to determine what 
+the base of the triangles are.
+
+So x1 = originX - sqrt(r^2 - dy^2)      x2 = originX + sqrt(r^2 - dy^2)
+
+
+So now with this method, we can now actually find the coordinates of the end points of every 
+single row,and call drawLine to draw a filled circle!
+
+pseudo code:
+drawCircle(x,y,r):
+    for each dy = -r to r do:
+        drawLine(x - sqrt(r^2-dy^2),y+dy,x + sqrt(r^2-dy^2),y+dy)
+
+
+So this will draw a filled circle. Well what if we want to draw a circle with only the outline.
+Well we can simply replace drawLine(x - sqrt(r^2-dy^2),y+dy,x + sqrt(r^2-dy^2),y+dy), with:
+
+drawPixel(x - sqrt(r^2-dy^2),y+dy)
+drawPixel(x + sqrt(r^2-dy^2),y+dy)
+
+
+So now we know how to draw a pixel, draw a line, and draw a circle !
+
+
+Implementation notes
+=================================================================================================
+drawPixel:
+    How can you set a single bit in a 16 bit value?
+    Well this can be done using logical 16-bit operations like OR and AND etc.
+
+
+drawLine:
+    We have to modify the algorithm shown for a screen that has an origin (0,0) at the screen's
+    top left corner. The algorithm shown above was designed for origins that are at the bottom
+    left corner, but the Hack screen has its origin at the top left corner of the screen
+
+    We also need generalized the algorithm above so that it can draw lines that go in any 
+    direction. We previously only focused on north-east lines for the algorithm above, but
+    in reality we have at least four different situations (maybe can reduce it to two situations,
+    north-east and north-west,using min and max,maybe)
+
+    Drawing horizontal and vertical lines should be handled as special cases. They can maybe be 
+    handled more efficiently instead of using the same algorithm for drawing diagonal lines.
+    It's important for horizontal and vertical lines to be optimized to the fullest since 
+    they are the most common drawing operations, they are used to draw rectangles,squares and 
+    so on. Of course we want every operation to be fast, but in particular we want popular
+    operations to be fast
+
+drawCircle:
+    It turns out that the algorithm above could potentially lead to overflow, but if you limit
+    r to no greater than 181, you won't run into any overflow problems.
+
+
+The remaining functions of the Screen class are not discussed because they are simple to implement.
