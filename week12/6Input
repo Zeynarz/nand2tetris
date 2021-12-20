@@ -1,0 +1,94 @@
+THE KEYBOARD CLASS
+--------------------
+The Keyboard Class contais the subroutines:
+-keyPressed     -readLine
+-readChar       -readInt
+
+
+Remember that there is a keyboard memory map, which is a 16-bit word at address 24576.
+Whenever a key is pressed on the keyboard, the unicode / ascii code of the key is stored in the
+keyboard register / memory map. If no key is pressed,the keyboard register is est to 0.
+
+The unicode of each key: charSet.png
+
+For example, when you press "k" on the keyboard, as long as your finger is down on the "k" key,
+RAM[24576] = 0000000001001011 (75). Once you lift your finger off, and nothing is touching the 
+keyboard, RAM[24576] = 0000000000000000 (0)
+
+
+Now let's start to discuss about the subroutines of the Keyboard Class.
+
+
+Implementation of keyPressed()
+==================================================================================================
+keyPressed returns the IMMEDIATE currently pressed code, if no key is pressed, 0 is returned.
+It essentially just returns the value of the keyboard memory map of that time.
+
+keyPressed():
+    if a keyboard key is pressed:
+        returns the key's scan code
+
+    else
+        return 0
+
+
+This is the most primitive input function of the Jack OS. 
+This function is like a realtime listener, when you invoke / call it,what you get is what is 
+currently being pressed on the keyboard in this very instant of time.
+
+
+Implementation of readChar()
+===================================================================================================
+Instead of returning the immediate currently pressed code like keyPressed(), readChar() actually 
+waits for the user input, then returns the char read. The char read will be echoed to the screen.
+
+keyPressed() doesn't wait for anything, and just returns the value of the keyboard memory map.
+readChar() waits until a key is pressed and RELEASED, then returns the char read.
+
+readChar():
+    display the cursor
+
+    // waits until a key is pressed
+    while (keyPressed() == 0):
+        do nothing
+
+    c = code of the currently pressed key
+
+    // waits until key is released
+    while (keyPressed() != 0):
+        do nothing
+
+    display c at the current cursor location
+    advance the cursor
+    
+
+Implementation of readString()
+===================================================================================================
+Keep reading chars until a newLine is read, then the text will be echoed to the screen.
+
+readLine():
+    str = empty string
+
+    repeat:
+        // All the waiting of user input is already handled in readChar()
+        c = readChar()
+        
+        if (c == newLine):
+            display newLine // can be done and handled using Output.println()
+            return str
+        
+        elif (c == backSpace):
+            remove the last character from str
+            do Output.backspace()
+
+        else:
+            str = str.append(c)
+
+
+Implementation notes
+===================================================================================================
+keyPressed() can be very easily implemented using Memory.peek()
+
+For readChar and readLine, simply implement the algorithm mentioned above
+
+For readInt, just read characters (digits) and build the integer value

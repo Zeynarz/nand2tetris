@@ -1,0 +1,201 @@
+THE OUTPUT CLASS
+------------------
+Computers have at least two modes of handling the screen.
+
+First of all,your high level program can think about/treat the screen in graphics mode,treating the 
+screen as  256 rows of 512 black and white pixels on Hack. Using the Screen class of the Jack OS, 
+you can draw allsorts of pictures on this 256*512 screen.
+
+However,sometimes you want your high level program to write letters and sentences on the screen. To do 
+this, your high level program can think about/treat the screen in textual mode, and treat the screen as 
+23 rows of 64 characters. In order for high level programmers to use the screen in this fashion, we
+don't use the Screen class, we use the Output class to write characters on the screen.
+
+So these two classes,Screen and Output,provide two different ways to think about and operate on the 
+screen.
+
+The Screen class implements abstractions like circle and rectangle drawing,whereas the Output class
+implements abstractions like letters and digits drawing.
+
+
+The Hack character set: charSet.png
+The Hack computer supports and recognizes all these characters.
+
+Some of these characters are printable, some are not. All the printable characters must have some
+bitmap image that displays these characters on the screen.
+
+
+In the Output class, although the screen is characterized by / treated as a grid of 23 rows and 64 
+columns,we have to remember that ACTUAL physical screen / the infrastructure is still 256 by 512 
+pixels. 
+
+So while implementing the Output class, we have to use a 256 by 512 pixels grid, to realize a 23 by
+64 characters grid. 
+
+(Characters are essentially the same as pictures in Jack,a character is just a bitmap figure that we
+have to draw using pixels)
+
+
+Font
+======================================================================================================
+Look at the photo: photos/font.png
+
+What we have here,is the Hack font,which describes how each individual character should be drawn on 
+the screen / which is the bitmap of each individual character.
+
+Each character occupies a fixed area of 11-pixels high and 8-pixels wide, this area is called the
+"frame".
+
+This is why a row of 512 pixels can only hold 64 characters, 512 // 8 = 64, and why a column of 
+256 pixels can only hold 23 characters, 256 // 11 = 23.
+
+So that's why the Output class treats the screen as 23*64 chars.
+
+The frame includes 2 empty right columns for character spacing,and 1 empty bottom row,for row spacing.
+In font.png,it may look like the frame has 2 empty bottom rows,but remember that we have letters like
+"Q" and "g" that have tails going down, so we have to use one more row to handle these characters. It
+just so happens that the characters shown in font.png does not have any tails.
+
+(The instructors actually worked quite hard to develop and design this font/bitmap,so huge props to 
+them)
+
+So a font, is just a whole set of images / bitmaps, that determines how to draw every character on
+a computer screen.
+
+
+Implementing the Jack Font
+======================================================================================================
+(Implementing the Jack Font is actually involves a lot of work,but the good news is that the 
+instructors did it for us,so huge props to them again)
+
+ALL OF THIS CODE IS PROVIDED IN THE NAND2TETRIS SOFTWARE SUITE:
+class Output {
+    static Array charMaps;
+    // This array will hold all the bitmaps of the all the printable chars in the character
+    // set. This is a static variable since it should be accessible to every subroutine 
+    // in the class, so every subroutine / output will use the same font
+
+    function void initMap(){
+        // private / helper function
+        // called when the computer is turned on
+        let charMaps = Array.new(127);
+        
+        // Assigns the bitmap for each character in the character set
+        // Output.create is also another private / helper function
+        do Output.create(97,0,0,0,14,24,30,27,27,54,0,0);      // a
+        do Output.create(98,3,3,3,15,27,51,51,51,30,0,0);      // b
+        do Output.create(99,0,0,0,30,51,3,3,51,30,0,0);        // c
+        ...
+
+        do Output.create(48,12,30,51,51,51,51,51,30,12,0,0); // 0
+        do Output.create(49,12,14,15,12,12,12,12,12,63,0,0); // 1
+        do Output.create(50,30,51,48,24,12,6,3,51,63,0,0);   // 2
+        ...
+        
+        ...
+        
+        // Black square, used for displaying non-printable characters.
+        do Output.create(0,63,63,63,63,63,63,63,63,63,0,0);
+    
+        ...
+    }
+}
+
+Output.create(...) is used to actually describes the bitmap of each individual char.
+
+Take a look at the statement:
+(This statement is used to describe/add the bitmap of the character "a" to the array.)
+do Output.create(97,0,0,0,14,24,30,27,27,54,0,0);      // a
+
+The first parameter "97", is the ASCII code of the lower case "a", and then there are 11 other 
+parameters that describes the bitmap of "a". The second parameter describes the first row of
+the bitmap, the third parameter describes the second row of the bitmap and so on and so forth,
+
+Look at : photos/lowerCaseA.png
+ 
+You can see that the first three rows of the bitmap are empty,so parameter 2,3,4 is "0".
+In the next row,the roof of the a letter looks like "01110000", now we have to invert it, so we have
+"1110",which in decimal is "14",which is what the fourth parameter is.
+
+
+Remember that the LSB of the first word of the screen memory map represents the first bit.
+So "0000000000000001" means that the topleft pixel of the screen is on.
+
+And for the top right pixel of the screen to turn on, the last word of the row has to be 
+"1000000000000000", that's how the screen memory map works, so that's why "01110000" has to be 
+inverted.
+
+
+So what does the create function actually look like?
+
+function void create(int index, int a, int b, int c, int d, int e,
+                     int f, int g, int h, int i, int j, int k) {
+    var Array map;
+    
+    let map = Array.new(11);
+    let charMaps[index] = map;
+    
+    let map[0] = a;
+    let map[1] = b;
+    let map[2] = c;
+    let map[3] = d;
+    ...
+    
+    return;
+}
+
+create() is called 127 times, 1 time for each printable char.
+
+map stores a bitmap, and charMaps stores all the maps, so essentially a two dimensional array is
+implemented.
+
+
+Cursor
+======================================================================================================
+Now that we pretty much know how to draw characters, we just have to know where to draw these
+characters.
+
+The cursor is a 11*8 frame,that indicates where the next character will be written if Output is 
+asked to write a character.
+
+So when the Output class is asked to write a character, it will always refer to the cursor.
+So there needs to be some internal accounting, to remember where the cursor is. The location of the
+cursor will obviously be affected each time a new character is drawn.
+
+(As a developer of an OS,you can choose whether or not to show the cursor on the screen for the 
+user of the OS using maybe a blinking effect or an underline etc. For the Jack OS,it is decided not 
+to show the cursor at all.)
+
+
+The cursor must be managed as follows:
+- When a "newLine" is asked to be displayed, the cursor should be moved to the beginning of the
+  next line.
+- If asked to display backspace, the cursor should be moved one column to the left.
+- If asked to display any other character, display the character, then move the cursor one column to
+  the right.
+
+
+OS Output class (API)
+======================================================================================================
+class Output{
+
+    // This function calls initMap(). This function is prob called by Sys.init, not sure 
+    function void init() {}
+
+    // Move cursor to i'th row,j'th column
+    function void moveCursor(int i,int j){}
+
+    function void printChar(char c){}
+
+    function void printString(String str){}
+
+    function void printInt(int i){}
+
+    // advances the cursor to the beginning of next line
+    function void println() {}
+
+    function void backSpace() {} 
+}
+
+Given all the information above, and given all the help with the implementation of the Jack font by 
+the instructors, implementing these functions won't be terribly complicated.
