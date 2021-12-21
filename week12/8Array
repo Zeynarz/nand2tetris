@@ -1,0 +1,57 @@
+THE ARRAY CLASS
+----------------
+The Array class contains the subroutines:
+- function Array new(int size)    
+- method void dispose()
+
+Example of using the Array class:
+...
+var Array a,b;
+...
+let a = Array.new(3);
+let b = Array.new(50);
+...
+let a[2] = 1337;
+...
+let b[1] = a[2] - 100;
+...
+do a.dispose();
+...
+
+
+So what is shown in the example is typical array creation and manipulation commands.
+
+There is something important to point out about arrays, and that is array manipulation and array 
+access in Jack is actually handled by the compiler, generating code like "push arr; push 2... pop
+pointer 0..." etc.
+
+The only thing that is handled by the operating system, is array construction. So there is actually 
+nothing much to the Array class, it just needs allocate and free memory.
+
+
+Now let's actually look at implementing the two subroutines of the Array class
+
+
+Implementation notes
+===================================================================================================
+Notice that Array.new() is actually a function, not a constructor.
+
+With a constructor, the object and memory you allocate depends on how many fields your object has,
+so the constructor will always allocate the same amount of memory for objects of the same class.
+
+If your class contains 4 fields, the constructor will always allocate 4 words for the object.
+If your class contains 10 fields, the constructor will always allocate 10 words for the object.
+
+But for arrays, we want to be able to control the size of the array constructed, we want to be
+able to create arrays of different sizes, and that can't be implemented well using a constructor.
+
+That's why we have to use a function, array construction becomes very trivial if Array.new is a 
+function.
+
+new(size):
+    return Memory.alloc(size)
+
+To implement dispose(), simply use Memory.deAlloc(...).
+
+(It makes sense that the type of the function Array.new() is Array because the return value of the 
+function is a pointer, and Arrays are just pointers.)

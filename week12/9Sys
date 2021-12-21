@@ -1,0 +1,121 @@
+THE SYS CLASS
+--------------
+The Sys class contains the subroutines:
+- init      - halt
+- error     - wait
+
+Before talking about implementing these subroutines, let's talk about booting.
+
+
+Bootstrapping (Booting)
+====================================================================================================
+Bootstrapping (booting) : the process of loading the basic software into the memory of a computer
+after power-on or general reset, especially the operating systems which will then take care of 
+loading other software as needed. (Wikipedia)
+
+
+Booting of the Jack Hack platform, is done using four different contracts, that all have to be 
+fulfilled in order for booting to work.
+
+HARDWARE CONTRACT:
+When the computer is reset, execution starts with the instruction in ROM[0]
+
+
+VM CONTRACT:
+The following code should be placed at the top of the ROM,beginning in ROM[0]:
+sp = 256
+call Sys.init
+
+(These commands must of cousre be written in machine language, this code here is just pseudo code)
+
+
+JACK CONTRACT:
+Program execution starts with the function Main.main()
+
+
+OS CONTRACT:
+There should be a Sys.init function, and Sys.init should initialize the OS and then call Main.main.
+
+
+So when the Hack computer is started, it will execute the instructions starting at ROM[0].
+The stack pointer will be set and Sys.init will be called. Sys.init will initialize the OS, 
+and Main.main is called, and the high level programmer's program begins to execute.
+
+
+Looking back at the definition of bootstrapping by wikipedia, we can now see that the 
+booting process of the Jack Hack platform lines up with the given definition.
+
+Sys.init is called and the OS, which is the basic software is initialized and called.
+This is "the process of loading the basic software into the memory of a computer after power-on or 
+general reset, especially the operating system"
+
+Sys.init then calls Main.main, so "operating systems which will then take care of loading other 
+software as needed". 
+
+
+Implementation notes
+====================================================================================================
+class Sys {
+
+    // Performs all the initializations required by the OS
+    // Perhaps the most interesting function, and definitely the most necessary / needed function is
+    // init()
+
+    function void init(){
+        // Initialize all the OS classes
+        do Math.init();
+        do Memory.init();
+        do Screen.init();
+        ...
+
+        do Main.main();
+    }
+    
+    // Halts execution
+    function void halt() {}
+
+    // Waits approximately duration miliseconds, and returns.
+    function void wait(int duration) {}
+
+    // Prints the given error in the form "ERR<errorCode>", and then halts
+}
+
+Sys.halt can be implemented using an infinite loop to give the illusion that the computer has stopped.
+(Not the most elegant way to do this, but it works)
+
+Sys.wait can be implemented using a loop. The loop should have some delay factor or constant in it,
+the runtime of one iteration should depend on this constant. So if 1 iteration takes 1 millisecond, 
+then just iterate for "duration" times, or maybe if 100 iterations takes 1 millisecond, then 
+iterate for "duration" * 100 times.
+
+You have to use a timer to time how long a loop takes, and change / add stuff accordingly
+You can set a timer for maybe 5 seconds (5000 milli seconds),then change the delay based on
+how many iterations it took etc.
+
+If your computer is very fast, then of course there needs to be more delay to increase the time taken,
+so this delay really depends on how fast a computer is.
+
+
+And that's it! All the OS classes have been discussed! All that is left is to build the OS.
+
+
+
+
+
+
+I want to give a humongous thanks to the instructors of nand2tetris, Shimon Schocken and Noam Nisan.
+This course has taught me an insane amount of computer science knowledge, and has increased my
+capibility of understanding things. This course made me understand what goes on behind a computer,
+and has increased my love for computer science.
+
+Before this course I didn't even know how RAM works, what an ALU was, how a CPU is built, how RAM ROM
+and CPU works together, how a compiler works etc. Now I have built my own computer using HDL,I have
+programmed my own Assembler,VM Translator,Compiler and soon, an OS.
+
+This may seem like nothing to some people, but this has been an incredible achivement of mine, and I
+am very proud and grateful that I have come across nand2tetris, and have (almost (still need to build
+the OS lol)) completed nand2tetris.
+(I came across this course because a viewer of geohot's fromthetransistor stream, mentioned this
+course)
+
+Thank you, to the team behind nand2tetris. I am eternally grateful for all of your work on nand2tetris.

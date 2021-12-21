@@ -1,0 +1,191 @@
+THE STRING CLASS
+------------------
+The String class contains the following subroutines:
+- new        
+- dispose
+- length: Return the actual length of the string
+- charAt: Return the character at the specified index of the string
+- setCharAt: Sets the j'th character of the string to some desired character 
+- appendChar: Append a character to the end of the string and return the string
+- eraseLastChar: Remove last char
+- intValue: Returns the integer value of this string until the first non-numeric character, essentially
+            the same as int() of python.
+
+- setInt: Sets this string to the representation/ASCII of a given integer. Kind of like str() of 
+          python. 
+
+- newLine: Return the ASCII value of newline. This is convenient to have to make high level Jack
+           code look cleaner and readable, using actual ASCII constants in high level code may bring
+           some confusion to people reading the code. Programmers also routinely forget what the 
+           ASCII value of newLine, so this function will help.
+
+- backSpace: Return the ASCII value of backSpace. Same reason to have as newLine.
+
+- doubleQuote: Return the ASCII value of double quote ("). Same reason to have as newLine.
+
+
+Examples of these subroutines being used:
+...
+var String s;
+var int x;
+...
+let s = String.new(6); // maximum length of 6,but currently actual length of 0 since there are no chars
+
+...
+let s = s.appendChar(97);  // s = "a". Actual length is now 1
+let s = s.appendChar(98);  // s = "ab"
+let s = s.appendChar(99);  // s = "abc"
+let s = s.appendChar(100); // s = "abcd"
+
+...
+let x = s.length(); // x = 4 (actual length)
+
+...
+do s.setInt(314); // s = "314"
+
+...
+let x = 2 * s.intValue();   // x = 628
+
+
+So setInt converts integers to strings and 
+   intValue converts strings to integers
+
+
+String construction
+===================================================================================================
+In Jack, a String is actually just an object.
+
+There are two properties of a String object:
+- an Array that contain characters (ASCII codes)
+- the actual length of the String 
+
+class String {
+    field Array str;
+    field int length;
+
+    constructor String new(int maxLength){
+        let str = Array.new(maxLength);
+        let length = 0; // currently the String contains no characters
+        return this;
+    }
+
+}
+
+So if s = "abc", in memory, the String object will look smthg like this:
+
+                     ---------
+s    (stack)         | 8500  | -------
+310                  |...    |       |
+....                 |...    |       |
+8500 (str Array)     |9000   | <------  ----- 
+8501 (actual length) |3      |              |
+....                 |...    |              |
+9000                 |97 (a) | <-------------             
+9001                 |98 (b) |              
+9002                 |99 (c) |
+....                 |...    |
+                     ---------
+
+Now that we know this, subroutines like:
+- length    - charAt    - setCharAt     - appendChar    -eraseLastChar
+are mostly just array manipulations.
+
+dispose() is just mainly Memory.deAlloc().
+
+The ASCII value of
+newLine: 128
+backSpace: 129
+doubleQuote: 34
+
+So to implement the functions newLine(), backSpace() and doubleQuote(), simply return their 
+corresponding ASCII values.
+
+
+The two subroutines left are intValue and setInt, which are the two most interesting subroutines in 
+the String class.
+
+
+Converting integers to string
+===================================================================================================
+Let's say that we want to convert 123 into a string
+Well the right most digit is 3 right, how can we extract this value? 
+
+Well any decimal number modulo 10 will always give you the last digit of any given number,since
+the second and third digit  is always divisible by 10.
+
+So we can just do 123 % 10 to get 3.
+Using modulo 10, we can always extract the right most digit
+
+
+Now that we extracted 3, we just have to extract 1 and 2, how can we do that?
+Well we can just chop off 3 from 123 to get only 12, and then repeat. Once we extract 2,we can
+chop of 2 from 12 to get only 1, and then repeat to extract 1.
+
+
+So how can we chop off 3 from 123?
+Well we can just do integer division. 123 // 10 = 12.
+
+So to chop off the last digit, we can just do integer division by 10. 
+
+
+int2String(val):
+        // Recursive function, so the stack may grow quite a bit
+        lastDigit = val % 10
+        c = ASCII value of lastDigit
+
+        if (val < 10):
+            // if val is less than 10, there are no more digits left to add, so we can return
+            return c (as a string)
+
+        else:
+            return int2String(val/10).append(c)
+            
+
+(To get the ascii code/value of a digit, simply add 48. For example to find the ascii code of 5,
+5 + 48 = 53,which is correct)
+
+The state of all variables of all iterations during int2String(123):
+-------------------------------
+|val    lastDigit   c   retVal|
+|123    3           51  "123" |
+|12     2           50  "12"  |
+|1      1           49  "1"   |
+-------------------------------
+
+
+To implement setInt(), just implement the int2String algorithm. While implementing setInt(),keep 
+in mind that it sets "this" to the converted string, so a few changes may need to made to the 
+algorithm.
+
+Converting strings to integers
+===================================================================================================
+Let's say that we want to convert "123" to an integer.
+So we have to convert the ascii form "123" into an actual integer.
+
+Let's take the most significant character/digit , which is "1", ASCII code 50, and convert it into 
+an integer 1. (Just minus the ascii code by 49 to convert a character to a single digit)
+
+Then I store this 1, and look at the next character, which is "2". We convert string "2" to get 
+integer 2.
+
+Now what I can do is get what I stored before, which is 1,multiply it by 10 to get 10, and add 2
+to get 12. Now we store this 12.
+
+Again, I look at the next character, which is "3", and convert it to integer 3. Then I get the
+value which I stored before, which is 12, multiply it by 10 to get 120, and add 3 to it to get 
+123.
+
+And then there are no more characters, so I'm done.
+
+string2Int(str):
+    val = 0
+    for i in range(str.length):
+        d = integer value of str[i]
+        val = val * 10 + d
+
+    return val
+
+
+To implement intValue(), simply implement the string2Int algorithm. 
+
+And that's it for the String class!
