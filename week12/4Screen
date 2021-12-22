@@ -102,6 +102,10 @@ There are a ton of advantages to vector graphics.
     You can try to do it using algorithms etc,but still at the end it is unpleasent to the
     human eye.
 
+    ( Maybe to develop bitmaps that will scale well, humans need to develop a bitmap for each
+      different size. Maybe fonts scale so well is because humans develop bitmaps for every
+      different size. )
+
     For vector graphics,you have perfect scaling. If you want to draw the cup bigger, you can 
     just manipulate the numbers of drawLine(),drawRectangle etc, and you will get a perfect 
     figure drawn.
@@ -347,6 +351,9 @@ while ((a <= dx) and (b <= dy))
 This algorithm now involves only addition and subtraction, versions of this algorithm can now
 be implemented highly efficiently in either software or hardware.
 
+(Not sure if the algorithm can draw horizontal and vertical lines, prob can, but still needs
+some more thinking to make sure)
+
 This algorithm is also as good as it gets,you cannot improve it further.
 
 
@@ -396,14 +403,20 @@ single row,and call drawLine to draw a filled circle!
 pseudo code:
 drawCircle(x,y,r):
     for each dy = -r to r do:
-        drawLine(x - sqrt(r^2-dy^2),y+dy,x + sqrt(r^2-dy^2),y+dy)
+        drawLine(x - sqrt(r^2- (dy^2)),y+dy,x + sqrt(r^2- (dy^2)),y+dy)
 
+When dy = 0 , which is at the center of the circle, drawLine's arguments will be
+x - sqrt(r^2),y + dy,x + sqrt(r^2), y + dy which is the same as
+x - r, y ,x + r, y
+
+Which is exactly what we want, a line that is 2r long, at the center of the circle, so everything
+works out.
 
 So this will draw a filled circle. Well what if we want to draw a circle with only the outline.
-Well we can simply replace drawLine(x - sqrt(r^2-dy^2),y+dy,x + sqrt(r^2-dy^2),y+dy), with:
+Well we can simply replace drawLine(x - sqrt(r^2-(dy^2)),y+dy,x + sqrt(r^2-(dy^2)),y+dy), with:
 
-drawPixel(x - sqrt(r^2-dy^2),y+dy)
-drawPixel(x + sqrt(r^2-dy^2),y+dy)
+drawPixel(x - sqrt(r^2-(dy^2)),y+dy)
+drawPixel(x + sqrt(r^2-(dy^2)),y+dy)
 
 
 So now we know how to draw a pixel, draw a line, and draw a circle !
@@ -435,7 +448,8 @@ drawLine:
 
 drawCircle:
     It turns out that the algorithm above could potentially lead to overflow, but if you limit
-    r to no greater than 181, you won't run into any overflow problems.
-
+    r to no greater than 181, you won't run into any overflow problems. 
+ 
+(drawRectangle can be implemented through a series of drawLines)
 
 The remaining functions of the Screen class are not discussed because they are simple to implement.

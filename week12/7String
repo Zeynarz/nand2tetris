@@ -86,9 +86,18 @@ s    (stack)         | 8500  | -------
 ....                 |...    |
                      ---------
 
+In linux and most systems, strings uses a null byte to indicate where strings end.
+In Jack, we don't need to do that since we have the length property / field.
+
+(Now that you know how strings work in Jack, you need to remember how they work and how they are 
+implemented while implementing stuff like Output.printString(...))
+
 Now that we know this, subroutines like:
 - length    - charAt    - setCharAt     - appendChar    -eraseLastChar
 are mostly just array manipulations.
+
+(Remember to add or subtract the length property, and use the length property when implementing
+stuff like appendChar and eraseLastChar etc)
 
 dispose() is just mainly Memory.deAlloc().
 
@@ -187,5 +196,26 @@ string2Int(str):
 
 
 To implement intValue(), simply implement the string2Int algorithm. 
+(Overflow will happen, if int(str) > 65535)
+
+Although remember that the description / API of intValue is:
+intValue: Returns the integer value of this string until the first non-numeric character, essentially
+          the same as int() of python.
+
+
+So if s = "123abc", s.intValue() should return 123. 
+This can be very easily implemented with a check to see if the ASCII code is in the range 48 to 57,
+if it is not in range,just break out of the loop.
+
+If this check didn't exist, the loop will keep going and:
+d = 97(a) - 49 = 48 
+val = 123 * 10 + 48 = 1278
+
+d = 98(b) - 49 = 49
+val = 1278 * 10 + 49 = 12829
+
+d = 99(c) - 49 = 50
+val = 12829 * 10 + 50 = 128340
+
 
 And that's it for the String class!

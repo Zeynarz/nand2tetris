@@ -102,6 +102,9 @@ Now that we have this complete control over the RAM using this ram array, implem
 becomes a piece of cake
 
 
+(Actually could you implement peek and poke in the VM translator part? Using assembly to implement 
+them would prob be more efficient. Just an idea)
+
 Alloc and Dealloc (Heap management)
 ===================================================================================================
 Why do we need alloc and dealloc?
@@ -291,6 +294,53 @@ deAlloc(object):
 Using this algorithm, after a few alloc and deAllocs, the ram would look something like this
 : photos/ram.png
 
+
+Own thoughts:
+    If the criteria for a possible segment was segment.size >= size, this would work if 
+    segment.size = size, but there are some cases where this wouldn't work.
+
+    If segment.size = size, we can just use back the same metadata header, and just
+    remove the segment from the linked list.
+
+    Example:
+        Let's say that this chunk is in the free linked list.
+
+                     ---------
+        8000 next -> |9000   |
+        8001 size -> | 5     |
+        8002         |       |
+        8003         |       |
+        8004         |       |
+        8005         |       |
+        8006         |       |
+                     ---------
+
+        If Memory.Alloc(5) is called, we can just remove this chunk from the linked list,
+        and return 8002. We don't need to create a new metadata header, we can just use back
+        8000 as the metadata header.
+
+        But if Memory.Alloc(4) is called, and we use back the metadata header and change the
+        size metadata, 8006 would be like a stranded memory register. It is not a used word,there
+        are no pointers pointing to this address, but it is also not in the freeList. You can't 
+        even add it to the freeList since it is only one word, not two. 8006 will never be used, 
+        and 8006 will become useless.
+
+        If you don't use back the metadata header, you also can't fulfill the requirement.
+        You only have 5 words to deal with, whereas you need to use 2 words to create a new
+        metadata header, and 4 words for the user (Memory.Alloc(4)). 
+
+
+    So that is why, the criteria is segment.size >= size + 2.
+
+    
+
+
+
+
+
+
+
+
 Fragmentation and defragmentation
 ===================================================================================================
 Now notice that the more we recycle chunks, the more we use deAlloc, the more the heap becomes
@@ -345,6 +395,46 @@ merge as many small segments as it can to become big and continuos segments.
 
 (defrag is not required to be implemented in the Jack OS. If you want to implement it tho,no
 problem)
+
+
+Own thoughts:
+    A good time to call defrag() might be in deAlloc().
+    After deAlloc() has done its job, it should check if there are any surrounding (the chunk 
+    above and the chunk below) free memory chunks that could be merged together. If deAlloc(7500) 
+    is called, after freeing 7500, it should check its surrounding and see if there are any free 
+    chunks to be merged together. (Just like linux's malloc implementation)
+    
+    If this is done everytime a memory block is deAlloced, I'm pretty sure every chunk that 
+    could be merged, will be merged, and every defrag opportunity will be captured.
+
+    Example:
+        ---------
+        |chunk1 |       If chunk2,5 and 7 are freed, and then deAlloc(chunk4) is called.
+        |...    |       After deAlloc does its magic and free chunk4, defrag(chunk4) will 
+        |-------|       be called, and defrag will check the chunk above(chunk3) and the chunk
+        |chunk2 |       below(chunk5) to see if they are free chunks. chunk5 is indeed a free 
+        |...    |       chunk, so chunk4 merges with chunk5 to form one big chunk. 
+        |-------|       (We'll call this chunk mChunk45)
+        |chunk3 | 
+        |...    |       And then when chunk 1 is freed, th same thing happens, and chunk1 and 2 
+        |------ |       will merge together to form one chunk. (We'll call this chunk mChunk12)
+        |chunk4 | 
+        |...    |       When chunk6 is freed, deFrag checks the chunk above(mChunk45) and the 
+        |-------|       chunk below(chunk7) to see if they are free chunks. They are, so chunk6
+        |chunk5 |       will merge with chunk7 and also merge with mChunk45 to form one huge   
+        |...    |       chunk. (We'll call this chunk mChunk47)
+        |-------|   
+        |chunk6 |       And finally when chunk3 is freed, chunk3 will merge with mChunk12 and
+        |...    |       mChunk47, and everything will be merged together, as one chunk of memory.
+        |-------| 
+        |chunk7 |       Notice that at any given point in time, everytime there is an oppurtunity 
+        |...    |       to merge chunks together, it is taken, there were never two free chunks
+        |-------|       sitting side by side.
+        |...    | 
+        |...    | 
+        |...    | 
+        ---------
+
 
 
 Implementation notes

@@ -80,7 +80,8 @@ class Sys {
     // Prints the given error in the form "ERR<errorCode>", and then halts
 }
 
-Sys.halt can be implemented using an infinite loop to give the illusion that the computer has stopped.
+Sys.halt can be implemented using an infinite loop to give the illusion that the computer has stopped,
+since it is impossible to actually pause execution of the processor.
 (Not the most elegant way to do this, but it works)
 
 Sys.wait can be implemented using a loop. The loop should have some delay factor or constant in it,
@@ -98,9 +99,15 @@ so this delay really depends on how fast a computer is.
 
 And that's it! All the OS classes have been discussed! All that is left is to build the OS.
 
+Own thoughts:
+    What happens when Sys.init returns?
+    Well the assembly below "call Sys.init" will probably be executed.
 
+    What happens when Sys.init doesn't return?
+    Well if Sys.init doesn't return, the function under "function Sys.init" will probably
+    be executed.
 
-
+    So it might be a good idea to add Sys.halt() after calling Main.main in Sys.init().
 
 
 I want to give a humongous thanks to the instructors of nand2tetris, Shimon Schocken and Noam Nisan.

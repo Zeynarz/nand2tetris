@@ -170,10 +170,15 @@ to show the cursor at all.)
 The cursor must be managed as follows:
 - When a "newLine" is asked to be displayed, the cursor should be moved to the beginning of the
   next line.
-- If asked to display backspace, the cursor should be moved one column to the left.
+- If asked to display backspace, the cursor should be moved one column to the left. (The char should
+  probably also be removed from the screen?)
 - If asked to display any other character, display the character, then move the cursor one column to
   the right.
 
+(If the cursor is at the beginning of a line, when backspace is asked to be displayed, should the
+cursor jump to the previous line?
+
+If asked to display characters, if the cursor is at the end of the line, should it jump to a new line?)
 
 OS Output class (API)
 ======================================================================================================

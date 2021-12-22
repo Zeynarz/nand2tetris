@@ -15,6 +15,18 @@ For example, when you press "k" on the keyboard, as long as your finger is down 
 RAM[24576] = 0000000001001011 (75). Once you lift your finger off, and nothing is touching the 
 keyboard, RAM[24576] = 0000000000000000 (0)
 
+In the Hack computer, if you press a key, and then without lifting your finger you use another finger
+to press another key, RAM[24576] will contain the ASCII code of the second key.
+
+For example, if you press "a", and then you keep pressing "a", and use another finger to press "b",
+RAM[24576] will be the ASCII code of "b".
+
+(If multiple keys are being pressed,what will be in RAM[24576]? Well as humans it's pretty much impossible
+to press two keys at the exact same millisecond,so it would prob depend on the human and which key he/she
+presses first. RAM[24576] will contain the code of the key that is pressed last.
+
+If they are actually pressed at the exact same millisecond, it prob depends on which key's signal reaches 
+the computer faster, whoever is slower will be in RAM[24576].)
 
 Now let's start to discuss about the subroutines of the Keyboard Class.
 
@@ -60,7 +72,19 @@ readChar():
 
     display c at the current cursor location
     advance the cursor
-    
+
+
+(If a key is already pressed while readChar() is called, it just needs to wait for the key to be released)
+
+If you press a key, and without letting go of the key you press another key, and then you release both
+keys (when RAM[24576] is equal to 0), the first key will probably be returned. This is because the first 
+key is captured in the "c" variable.
+
+
+If the user presses a key and then releases it insanely quickly, will it be possible that when the key is
+pressed, keyPressed() != 0, and the loop is broken, but when you try to capture the key in "c", the key is
+already released, and c = 0.
+
 
 Implementation of readString()
 ===================================================================================================

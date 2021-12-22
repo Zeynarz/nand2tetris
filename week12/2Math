@@ -219,14 +219,49 @@ Handling negative numbers:
     Well it turns out that if the inputs are two's complement values, the algorithm will work fine
     as is. So no changes need to be made for this part.
 
-    Example:
+    Example (7 * -1):
+        (Imagine that we are dealing with a 4-bit computer,a RAM entry is 4 bit etc)
+        7 = 0111    -1 = 1111
+
+        States of variables in each iteration:
+        -----------------------------------------
+        |shiftedX     i'th bit of y     sum     |
+        |0111           1               0111    |
+        |1110           1               0101    |
+        |1100           1               0001    |
+        |1000           1               1001    |
+        -----------------------------------------
+        (sums wrap around if the final result of addition is too big)
+
+        -7 is indeed 1001.
+        (can confirm by NOT(7) + 1)
 
 Handling overflow:
     The two vars that could get overflowed is sum and shiftedX.
     Well it turns out once again that the algorithm always returns the correct answer modulo 2^16
+    (since we only have 16 bits to work with, and can't represent numbers bigger than 2^16)
 
     So the algorithm may not give you ALL the digits of the correct answer,but the digits the
     algorithm will give WILL be the right ones
+
+    Example (5 * 5):
+        (AGAIN imagine that we are dealing with a 4-bit computer,a RAM entry is 4 bit etc)
+        5 = 0101
+
+        States of variables in each iteration:
+        -----------------------------------------
+        |shiftedX     i'th bit of y     sum     |
+        |0101           1               0101    |
+        |1010           0               0101    |
+        |0100           1               1001    |
+        |1000           0               1001    |
+        -----------------------------------------
+         
+        1001 = 9
+        5 * 5 = 25, 25 % 2**4 = 25 % 16 = 9
+
+        So this is correct
+        
 
 Implementing (i'th bit of y):
     How can we extract a certain bit from "y"? Well we could make a boolean function called bit 
@@ -252,6 +287,47 @@ Implementing (i'th bit of y):
     array. This is actually quite typical to operating systems,when they start running,there is an
     init stage which the operating system builds all sorts of data structures which it is going to 
     use throughout its execution)
+
+
+    Own thoughts:
+        If Jack had bit shifting operations, the bit function could probably be implemented like
+        this:
+            
+            bit(58,3):
+                (0th bit is the right most bit, so 3rd bit of "1010", is 1) 
+                
+                bit(int x,int i)
+                First shift x to the right, i times
+
+                So 58 >> 3 = 7
+                111010 >> 3 = 111
+                (The i'th bit now becomes the least significant bit)
+
+                And then take the result and AND it by 1
+                (i'th bit AND 1)
+
+                7 & 1 = 1
+                If it is 1, it means that the i'th bit is 1, if it is 0, it means that the i'th
+                bit is 0.
+
+                
+                There is probably a more efficient way of doing this, but I guess this works.
+
+
+        Another way to implement the bit function is:
+
+                bit(58,3):
+                    Take x and AND it by 2^y
+
+                    So 58 AND 2^3
+                    111010 AND 1000 = 1
+                    (AND the i'th bit with 1)
+
+                    If the answer is 1, the i'th bit is 1, else, the i'th bit is 0
+                    
+                    Unless there is a really efficient way of finding 2^y, I'm
+                    pretty sure the bit shifting implementation is faster.
+
 
 
 Now let's discuss some stuff about the division algorithm
