@@ -372,11 +372,11 @@ drawCircle(x,y,r);
 Well how can we draw these rows of pixels,how can we draw a circle that has a center (x,y) with
 radius r.
 
-In total, we will have to draw 2r(diameter)(+1?) rows. If r = 3,it means that 6(7?) rows are going
-to be drawn. Let's characterized these rows by the distance of these rows from the origin.(Just
-like in circle.png) So in the middle of the circle,the row is characterized with dy = 0,
-and as you go up, dy goes down (since 0,0 is on the top left) until dy = -r, and as you go down, 
-dy goes up until dy = r.
+In total, we will have to draw 2r(diameter)(+1? because of center row) rows. If r = 3,it means that 
+6(7?) rows are going to be drawn. Let's characterized these rows by the distance of these rows from 
+the origin.(Just like in circle.png) So in the middle of the circle,the row is characterized with 
+dy = 0, and as you go up, dy goes down (since 0,0 is on the top left) until dy = -r, and as you go 
+down, dy goes up until dy = r.
 
 
 In circle.png, there is a pixel that is red. Let's try to find the coordinate of that pixel.
@@ -449,6 +449,14 @@ drawLine:
 drawCircle:
     It turns out that the algorithm above could potentially lead to overflow, but if you limit
     r to no greater than 181, you won't run into any overflow problems. 
+
+    This is because r will be squared, and 181 * 181 = 32761, and 2**16-1 = 65355, 65355/2 = 
+    32767.5. (You have to divide by two since you also have to deal with negative numbers,so
+    the highest positive number you can store is 32767,and the lowest negative number you can
+    store is -32767). So if you were to square 182, 182*182 = 33124,the MSB bit will be 1,
+    and the result of 182 squared will be treated as a negative number
+
+    
  
 (drawRectangle can be implemented through a series of drawLines)
 

@@ -1,0 +1,110 @@
+Goal: Write the 8 OS classes in Jack
+      - Math     (d)    - Memory (d)    - Screen (d)    - Output (d) 
+      - Keyboard (d)    - String (d)    - Array  (d)    - Sys    (d)
+ 
+      Final test (d)
+
+
+(d) means done
+=================================================================================================
+(Remember that an OS is also just an abstraction,it is still just a program that needs to be compiled)
+
+There are already compiled OS files in nand2tetris/tools/OS
+If you are stuck on something while developing the OS classes, you can reverse engineer the compiled
+vm files to get some hints.
+
+(The developers of GNU Unix and Linux actually started from an existing executable OS known as Unix,
+and then developed their own versions of operating systems using reverse engineering)
+
+
+
+
+Let's say that you have developed the OS class Screen and want to test it.
+You can write a Main.jack file and use it to test the OS class.
+
+Just put both jack files in some directory, compile the directory using the JackCompiler and then
+execute it in the VM Emulator
+
+The VM Emulator actually has a built-in implementation of the OS (using Java),but if it finds a 
+user implementation of ANY VM FUNCTION (like drawLine(),drawRectangle etc), the VM Emulator will
+use your implementation instead of the built-in implementation
+
+I'm pretty sure that the VM Emulator will only use your implementation of the function you included,
+and the other OS functions that you didn't include, will still be using the built-in implementation.
+
+For example, if you have implemented drawPixel() and drawLine(), the VM Emulator will use your
+implementation of drawPixel and drawLine, but for functions like Memory.peek(), Memory.alloc(),
+Screen.drawRectangle, etc, will still use the built-in implementation.
+
+(If you implemented Screen.vm,the VM Emulator will use your Screen.vm implementation,along with
+all the built-in implementations of all the other OS classes)
+
+This is perfect for testing! Now you can implement subroutines one by one and test if they work
+individually.
+
+(If you implemented drawLine, but you didn't implement drawRectangle, and drawRectangle is called,
+when drawRectangle calls drawLine, I'm not sure if it will use the built-in implementation,or
+your implementation. Pretty sure it will use the built-in implementation since the built-in
+implementation is programmed in Java, and may not even use a function called drawLine)
+
+=================================================================================================
+The nand2tetris software suite provides OS Jack files that have subroutines declared in project12.
+These files also contains private subroutines,subroutines that are not in the OS API, like init() 
+and initMap().
+
+Example file (the Memory class):
+    class Memory {
+    
+        /** Initializes the class. */
+        function void init() {
+        }
+    
+        /** Returns the RAM value at the given address. */
+        function int peek(int address) {
+        }
+    
+        /** Sets the RAM value at the given address to the given value. */
+        function void poke(int address, int value) {
+        }
+    
+        /** Finds an available RAM block of the given size and returns
+         *  a reference to its base address. */
+        function int alloc(int size) {
+        }
+    
+        /** De-allocates the given object (cast as an array) by making
+         *  it available for future allocations. */
+        function void deAlloc(Array o) {
+        }    
+    }
+
+Tests files (Jack files) are also provided in nand2tetris/projects/12.
+So to test if an OS class is implemented correctly, just put your OS Jack file and test file in a
+directory, compile the directory and run the directory in the VM Emulator. 
+
+There are descriptions of how things should be if everything is running smoothly in the
+test files or READMEs, for example if the Screen.vm is implemented correctly, a picture of a house
+and a sun is drawn on the screen.
+
+
+Screen,Output,String,Keyboard and Sys are tested using Main.jack programs.
+Memory,Array,Math are testing using supplied .jack,.tst and .cmp files
+
+These classes can be developed in any order
+
+=================================================================================================
+
+Once all 8 of these classes are developed, a final test should be done.
+
+Final test:
+1. make a copy of the directory nand2tetris/projects/11/Pong
+2. copy the 8 compiled .vm files of your OS into this directory
+3. execute this directory in the VM Emulator
+
+Once your OS implementation passes this final test, it means that you have completed project 12!
+
+
+
+
+
+

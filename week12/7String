@@ -166,13 +166,15 @@ To implement setInt(), just implement the int2String algorithm. While implementi
 in mind that it sets "this" to the converted string, so a few changes may need to made to the 
 algorithm.
 
+setInt() should also be able to deal with negative integers.
+
 Converting strings to integers
 ===================================================================================================
 Let's say that we want to convert "123" to an integer.
 So we have to convert the ascii form "123" into an actual integer.
 
 Let's take the most significant character/digit , which is "1", ASCII code 50, and convert it into 
-an integer 1. (Just minus the ascii code by 49 to convert a character to a single digit)
+an integer 1. (Just minus the ascii code by 48 to convert a character to a single digit)
 
 Then I store this 1, and look at the next character, which is "2". We convert string "2" to get 
 integer 2.
@@ -195,8 +197,12 @@ string2Int(str):
     return val
 
 
-To implement intValue(), simply implement the string2Int algorithm. 
+To implement intValue(), simply implement the string2Int algorithm. (Still have to change some
+stuff since intValue() is a method)
+
 (Overflow will happen, if int(str) > 65535)
+
+intValue() should also be able to deal with negative numbers in strings.
 
 Although remember that the description / API of intValue is:
 intValue: Returns the integer value of this string until the first non-numeric character, essentially
@@ -208,14 +214,14 @@ This can be very easily implemented with a check to see if the ASCII code is in 
 if it is not in range,just break out of the loop.
 
 If this check didn't exist, the loop will keep going and:
-d = 97(a) - 49 = 48 
-val = 123 * 10 + 48 = 1278
+d = 97(a) - 48 = 49
+val = 123 * 10 + 49 = 1279
 
-d = 98(b) - 49 = 49
-val = 1278 * 10 + 49 = 12829
+d = 98(b) - 48 = 50
+val = 1279 * 10 + 50 = 12840
 
-d = 99(c) - 49 = 50
-val = 12829 * 10 + 50 = 128340
+d = 99(c) - 48 = 51
+val = 12840 * 10 + 51 = 128451
 
 
 And that's it for the String class!

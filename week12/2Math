@@ -327,6 +327,9 @@ Implementing (i'th bit of y):
                     
                     Unless there is a really efficient way of finding 2^y, I'm
                     pretty sure the bit shifting implementation is faster.
+                    (You also need to find 2^y without using multiplication, since you are 
+                     currently implementing multiplication, and we don't want to end up in
+                     an infinite loop and crash.)
 
 
 

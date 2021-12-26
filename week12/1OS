@@ -1,6 +1,7 @@
 OPERATING SYSTEM
 -----------------
 An operating system is just something that provides services
+An operating system is also just a complex program that also needs to be compiled
 
 The goal of the operating system is to close many gaps that exists between high level programming
 and the hardware your programs are going to execute on

@@ -43,7 +43,7 @@ Look at the photo: photos/font.png
 What we have here,is the Hack font,which describes how each individual character should be drawn on 
 the screen / which is the bitmap of each individual character.
 
-Each character occupies a fixed area of 11-pixels high and 8-pixels wide, this area is called the
+Each character occupies a fixed area of 11-pixels HIGH and 8-pixels WIDE, this area is called the
 "frame".
 
 This is why a row of 512 pixels can only hold 64 characters, 512 // 8 = 64, and why a column of 
@@ -170,8 +170,8 @@ to show the cursor at all.)
 The cursor must be managed as follows:
 - When a "newLine" is asked to be displayed, the cursor should be moved to the beginning of the
   next line.
-- If asked to display backspace, the cursor should be moved one column to the left. (The char should
-  probably also be removed from the screen?)
+- If asked to display backspace, the cursor should be moved one column to the left. (The char that
+  was originally at the left of the cursor should also be removed from the screen)
 - If asked to display any other character, display the character, then move the cursor one column to
   the right.
 
@@ -201,6 +201,9 @@ class Output{
 
     function void backSpace() {} 
 }
+
+Remember that printChar also has to call println() when it encounters a \n char, and need to
+call backSpace() when it encounters a back space char.
 
 Given all the information above, and given all the help with the implementation of the Jack font by 
 the instructors, implementing these functions won't be terribly complicated.
